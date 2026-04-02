@@ -1,0 +1,50 @@
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: laravel_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    depends_on:
+      - mysql
+
+  nginx:
+    image: nginx:alpine
+    container_name: laravel_nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx:/etc/nginx/conf.d
+    depends_on:
+      - app
+
+  mysql:
+    image: mysql:8.0
+    container_name: laravel_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: livraison_app
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"  # allow no password
+    ports:
+      - "3307:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  node:
+    image: node:20
+    container_name: laravel_node
+    working_dir: /var/www
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/var/www
+    command: sh -c "npm install && npm run dev"
+
+volumes:
+  dbdata:
