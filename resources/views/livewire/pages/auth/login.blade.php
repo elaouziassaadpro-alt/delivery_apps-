@@ -8,43 +8,62 @@ use Livewire\Volt\Component;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-
+use App\Enums\UserRole;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 
 new #[Layout('layouts.auth')] class extends Component
 {
     public LoginForm $form;
 
-    /**
-     * Handle an incoming authentication request.
-     */
-   public function login(): void
-{
-    $this->validate();
+    public function login()
+    {
+        $this->validate();
 
-    // 1. Improved Admin Creation Logic
-    if(User::count() == 0 && $this->form->email == 'admin@admin.com') {
-        User::create([
-            'name' => 'Admin',
-            'email' => $this->form->email,
-            'password' => Hash::make($this->form->password),
-            'role' => 'admin', // Ensure this matches your Enum case exactly
-            'photo' => 'assets/profile/default.png',
-            'email_verified_at' => now(),
-        ]);            
+        // Check if an admin specifically exists, or just use count() if it's a fresh app
+        if (User::where('role', 'admin')->count() == 0 && $this->form->email == 'admin@admin.com') {
+            User::create([
+                'name' => 'Admin',
+                'email' => $this->form->email,
+                'password' => Hash::make($this->form->password),
+                'role' => 'admin',
+                'photo' => 'assets/profile/default.png',
+                'email_verified_at' => now(),
+            ]);            
+        }
+
+        $this->form->authenticate();
+
+        Session::regenerate();
+
+        // We call the redirect logic here
+        return $this->redirectTo();
     }
 
-    $this->form->authenticate();
+    public function redirectTo()
+    {
+        $user = Auth::user();
 
-    Session::regenerate();
+        // 1. Basic safety check
+        if (!$user || !$user->role) {
+            Auth::logout();
+            return redirect('/login')->with('error', 'User role not assigned.');
+        }
 
-    // 2. Safer Redirect
-    // If 'redirect' route fails due to the Controller naming issue, 
-    // this is where the 500 hits.
-    $this->redirectIntended(
-        default: route('redirect', absolute: false), 
-        navigate: true
-    );
-}
+        // 2. Normalize role for Linux/Enum compatibility
+        $roleValue = strtolower($user->role);
+        $userRole = UserRole::tryFrom($roleValue);
+
+        // 3. Fallback if the role in DB doesn't match the Enum
+        if (!$userRole) {
+            Log::error("Invalid role detected for User ID {$user->id}: " . $user->role);
+            Auth::logout();
+            return redirect('/login')->with('error', 'Invalid system role.');
+        }
+
+        // 4. Final Redirect
+        return redirect()->intended(route($userRole->dashboardRoute(), absolute: false));
+    }
 }; ?>
 
 <div class="space-y-8 animate-in fade-in zoom-in duration-700">
