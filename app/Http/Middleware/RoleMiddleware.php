@@ -16,15 +16,25 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
+        // 1. Check if user is logged in
         if (!Auth::check()) {
             return redirect('/login');
         }
 
         $user = Auth::user();
-        if (!$user || !in_array(strtolower($user->role), array_map('strtolower', $roles))) {
-            abort(403, 'Unauthorized');
+
+        // 2. Safety check: Ensure role exists and handle case-sensitivity
+        if (!$user || !$user->role) {
+            abort(403, 'User role not assigned.');
         }
 
+        // 3. Normalize everything to lowercase for the comparison
+        $userRole = strtolower($user->role);
+        $allowedRoles = array_map('strtolower', $roles);
+
+        if (!in_array($userRole, $allowedRoles)) {
+            abort(403, 'Unauthorized access.');
+        }
 
         return $next($request);
     }
