@@ -1,5 +1,8 @@
+@props(['user' => null])
+
 @php
-    $initials = collect(explode(' ', trim($user->name ?? '')))
+    $userName = $user->name ?? 'Guest';
+    $initials = collect(explode(' ', trim($userName)))
         ->filter()
         ->map(fn($word) => strtoupper(substr($word, 0, 1)))
         ->take(2)

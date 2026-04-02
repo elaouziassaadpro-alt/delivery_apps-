@@ -3,23 +3,29 @@
     | Data Logic
     |--------------------------------------------------------------------------
     */
-    $stats = [
-        'total' => \App\Models\Order::count() ?? 0,
-        'pending' => \App\Models\Order::where('status', 'pending')->count() ?? 0,
-        'revenue' => (float)(\App\Models\Order::where('status', 'delivered')->sum('price') ?? 0),
-        'cancelled' => \App\Models\Order::where('status', 'cancelled')->count() ?? 0,
-    ];
+    // Wrap in safer calculation to prevent errors if migrations or data are missing
+    try {
+        $stats = [
+            'total' => (int)\App\Models\Order::count(),
+            'pending' => (int)\App\Models\Order::where('status', 'pending')->count(),
+            'revenue' => (float)(\App\Models\Order::where('status', 'delivered')->sum('price') ?? 0),
+            'cancelled' => (int)\App\Models\Order::where('status', 'cancelled')->count(),
+        ];
+    } catch (\Throwable $e) {
+        \Illuminate\Support\Facades\Log::warning("Dashboard stats fallback: " . $e->getMessage());
+        $stats = ['total' => 0, 'pending' => 0, 'revenue' => 0.0, 'cancelled' => 0];
+    }
 
     $mappedOrders = \App\Models\Order::whereNotNull('lat')->whereNotNull('lng')
         ->with('bon.client.user') 
         ->get(['id', 'code', 'lat', 'lng', 'status', 'bon_id', 'location'])
         ->map(fn($o) => [
             'id' => $o->id,
-            'lat' => (float)$o->lat,
-            'lng' => (float)$o->lng,
-            'code' => (string)$o->code,
-            'status' => strtolower((string)$o->status),
-            'location' => (string)$o->location,
+            'lat' => (float)($o->lat ?? 0),
+            'lng' => (float)($o->lng ?? 0),
+            'code' => (string)($o->code ?? 'N/A'),
+            'status' => strtolower((string)($o->status ?? 'pending')),
+            'location' => (string)($o->location ?? 'Unknown'),
             'client' => $o->bon?->client?->user?->name ?? 'N/A'
         ]);
 
@@ -31,7 +37,8 @@
         ];
     });
 
-    $maxCount = $weeklyData->max('count') > 0 ? $weeklyData->max('count') : 1; 
+    $maxCount = $weeklyData->max('count');
+    $maxCount = $maxCount > 0 ? (int)$maxCount : 1; 
     
     // Define a central Depot/HQ location for route tracing
     $depotLocation = [33.5731, -7.5898]; // Example: Casablanca
