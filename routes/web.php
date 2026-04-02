@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
-use App\Http\Controllers\Auth\DashboardRoleController;
+use App\Enums\UserRole;
 use Illuminate\Support\Facades\Auth;
 
 /*
@@ -29,7 +29,19 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    Route::get('/redirect', [DashboardRoleController::class, 'redirect'])->name('redirect');
+    Route::get('/redirect', function () {
+        $user = Auth::user();
+        if (!$user || !$user->role) {
+            return redirect('/login')->with('error', 'User role not assigned.');
+        }
+
+        $userRole = UserRole::tryFrom(strtolower($user->role));
+        if (!$userRole) {
+            return redirect('/login')->with('error', 'Invalid system role.');
+        }
+
+        return redirect()->route($userRole->dashboardRoute());
+    })->name('redirect');
     /*
     |--------------------------------------------------------------------------
     | ADMIN & MANAGER
