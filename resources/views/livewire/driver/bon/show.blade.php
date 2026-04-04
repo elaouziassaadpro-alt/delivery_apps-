@@ -394,7 +394,7 @@ new #[Layout('layouts.driver')] class extends Component
                     </thead>
                     <tbody class="divide-y divide-gray-50/60" x-init="$nextTick(() => lucide.createIcons())">
                         @forelse($orders as $order)
-                            <tr class="hover:bg-primary/[0.02] transition-colors group cursor-pointer" wire:click="$set('qrCode', '{{ $order->code }}')">
+                            <tr class="hover:bg-primary/[0.02] transition-colors group cursor-pointer border-b border-gray-100" wire:click="$set('qrCode', '{{ $order->code }}')">
                                 <td class="px-8 py-7 whitespace-nowrap">
                                     <div class="flex items-center space-x-4">
                                         <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">

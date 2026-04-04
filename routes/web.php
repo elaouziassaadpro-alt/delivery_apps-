@@ -92,6 +92,9 @@ Route::middleware(['auth'])->group(function () {
             Volt::route('/bons/{bon}/edit', 'driver.bon.edit')->name('bons.edit');
             Volt::route('/bons/{bon}/delete', 'driver.bon.delete')->name('bons.delete');
 
+            Volt::route('/orders', 'driver.order.index')->name('orders.index');
+            Volt::route('/orders/{order}', 'driver.order.show')->name('orders.show');
+            
 
             
 
