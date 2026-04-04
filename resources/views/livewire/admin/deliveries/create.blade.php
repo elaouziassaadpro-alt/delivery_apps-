@@ -41,21 +41,20 @@ new #[Layout('layouts.admin')] class extends Component
             'clients' => Client::with('user')->get(),
             'drivers' => Driver::with('user')->get(),
             'vehicles' => Vehicle::all(),
-            'bons' => Bon::all(),
+            'bons' => Bon::where('status', 'pending')->get(),
         ];
     }
     public function generateQrCode()
-    {
-        if (!$this->code) {
-            $this->addError('code', 'Code is empty.');
-            return;
-        }
-
-        $qrData = 'Bon: ' . $this->code;
-        $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($qrData);
-
-        return $qrUrl;
+{
+    if (!$this->code) {
+        return null;
     }
+
+    $qrData = 'Bon: ' . $this->code;
+    $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($qrData);
+
+    return $qrUrl;
+}
     /**
      * This function runs every time the 'location' property is updated.
      * We use Nominatim (OpenStreetMap) to get Lat/Lng for free.
@@ -101,7 +100,6 @@ new #[Layout('layouts.admin')] class extends Component
             'last_name' => 'required|string|max:255',
             'phone' => 'required|string|max:25',
             'email' => 'nullable|email|max:255',
-            'client_id' => 'required|exists:clients,id',
             'driver_id' => 'nullable|exists:drivers,id',
             'vehicle_id' => 'nullable|exists:vehicles,id',
             'code' => 'nullable|string|max:255|unique:orders,code',
@@ -129,15 +127,14 @@ new #[Layout('layouts.admin')] class extends Component
             $qrPath = $this->qr_file ? $this->qr_file->store('orders/qr', 'public') : null;
 
             Order::create([
-                'client_id' => $this->client_id,
                 'driver_id' => $this->driver_id,
                 'recipient_id' => $recipient->id,
                 'vehicle_id' => $this->vehicle_id,
                 'code' => $finalCode,
                 'qr_file' => $qrPath,
                 'location' => $this->location,
-                'lat' => $this->lat, // Now saving Lat
-                'lng' => $this->lng, // Now saving Lng
+                'lat' => $this->lat, 
+                'lng' => $this->lng, 
                 'price' => $this->price,
                 'driver_commission' => $driver ? $driver->commission : 0,
                 'commission' => $client ? $client->commission : 0,
@@ -214,14 +211,14 @@ new #[Layout('layouts.admin')] class extends Component
                     </div>
 
                     <div class="space-y-1">
-                        <label class="text-[10px] uppercase tracking-widest font-black text-gray-400">Assign Client</label>
-                        <select wire:model="client_id" class="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm">
-                            <option value="">Select a Client</option>
-                            @foreach($clients as $c)
-                                <option value="{{ $c->id }}">{{ $c->user->name }}</option>
+                        <label class="text-[10px] uppercase tracking-widest font-black text-gray-400">Assign Bon</label>
+                        <select wire:model="bon_id" class="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm">
+                            <option value="">Select a Bon</option>
+                            @foreach($bons as $b)
+                                <option value="{{ $b->id }}">{{ $b->code }}</option>
                             @endforeach
                         </select>
-                        <x-input-error :messages="$errors->get('client_id')" />
+                        <x-input-error :messages="$errors->get('bon_id')" />
                     </div>
 
                     <div class="space-y-1">
@@ -241,17 +238,6 @@ new #[Layout('layouts.admin')] class extends Component
                             <option value="">No Vehicle Assigned</option>
                             @foreach($vehicles as $v)
                                 <option value="{{ $v->id }}">{{ $v->make }} ({{ $v->license_plate }})</option>
-                            @endforeach
-                        </select>
-                        <x-input-error :messages="$errors->get('vehicle_id')" />
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-[10px] uppercase tracking-widest font-black text-gray-400">Select bon (Optional)</label>
-                        <select wire:model="bon_id" class="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm">
-                            <option value="">No bon Assigned</option>
-                            @foreach($bons as $b)
-                                <option value="{{ $b->id }}">{{ $b->name }} ({{ $b->license_plate }})</option>
                             @endforeach
                         </select>
                         <x-input-error :messages="$errors->get('vehicle_id')" />

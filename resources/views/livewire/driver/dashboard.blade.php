@@ -62,7 +62,7 @@
             <div class="lg:col-span-2 space-y-4">
                 <div class="flex items-center justify-between mb-2">
                     <h2 class="text-xl font-black text-gray-900 tracking-tight">Recent Deliveries</h2>
-                    <a href="{{ route('driver.deliveries') }}" wire:navigate class="text-xs font-bold text-primary hover:underline flex items-center space-x-1 uppercase tracking-widest">
+                    <a href="{{ route('driver.bons.index') }}" wire:navigate class="text-xs font-bold text-primary hover:underline flex items-center space-x-1 uppercase tracking-widest">
                         <span>View All</span>
                         <i data-lucide="arrow-right" class="w-3 h-3"></i>
                     </a>
@@ -116,7 +116,7 @@
                         </div>
 
                         <div class="space-y-4">
-                            <a href="{{ route('driver.deliveries') }}" 
+                            <a href="{{ route('driver.bons.index') }}" 
                                wire:navigate
                                class="flex items-center justify-center space-x-3 w-full bg-primary hover:bg-primary/90 text-white font-black py-4 rounded-2xl transition-all shadow-lg shadow-primary/20 group">
                                 <i data-lucide="qr-code" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>

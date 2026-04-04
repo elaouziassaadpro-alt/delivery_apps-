@@ -10,7 +10,6 @@ new #[Layout('layouts.admin')] class extends Component
     use WithPagination;
 
     public string $search = '';
-
     public function with()
     {
         return [

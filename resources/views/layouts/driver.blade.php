@@ -49,11 +49,11 @@
                     <span class="font-bold text-sm">Dashboard</span>
                 </a>
 
-                <a href="{{ route('driver.deliveries') }}" 
+                <a href="{{ route('driver.bons.index') }}" 
                    wire:navigate
-                   class="flex items-center space-x-3 px-4 py-3.5 rounded-2xl group {{ request()->routeIs('driver.deliveries') ? 'bg-primary/10 text-primary shadow-[inset_4px_0_0_0_rgba(var(--primary-rgb),1)]' : 'hover:bg-white/5 text-gray-400 hover:text-white' }} transition-all duration-300">
-                    <i data-lucide="truck" class="w-5 h-5 {{ request()->routeIs('driver.deliveries') ? 'drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]' : '' }}"></i>
-                    <span class="font-bold text-sm">Active Deliveries</span>
+                   class="flex items-center space-x-3 px-4 py-3.5 rounded-2xl group {{ request()->routeIs('driver.bons.*') ? 'bg-primary/10 text-primary shadow-[inset_4px_0_0_0_rgba(var(--primary-rgb),1)]' : 'hover:bg-white/5 text-gray-400 hover:text-white' }} transition-all duration-300">
+                    <i data-lucide="package" class="w-5 h-5 {{ request()->routeIs('driver.bons.*') ? 'drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]' : '' }}"></i>
+                    <span class="font-bold text-sm">Get Deliveries</span>
                 </a>
 
                 <a href="#" 
@@ -142,10 +142,10 @@
                 <span class="text-[10px] font-bold uppercase tracking-tighter">Home</span>
             </a>
 
-            <a href="{{ route('driver.deliveries') }}" 
-               class="flex flex-col items-center space-y-1 {{ request()->routeIs('driver.deliveries') ? 'text-primary' : 'text-gray-400' }}">
-                <div class="p-2 {{ request()->routeIs('driver.deliveries') ? 'bg-primary/10 rounded-xl' : '' }}">
-                    <i data-lucide="truck" class="w-6 h-6"></i>
+            <a href="{{ route('driver.bons.index') }}" 
+               class="flex flex-col items-center space-y-1 {{ request()->routeIs('driver.bons.*') ? 'text-primary' : 'text-gray-400' }}">
+                <div class="p-2 {{ request()->routeIs('driver.bons.*') ? 'bg-primary/10 rounded-xl' : '' }}">
+                    <i data-lucide="package" class="w-6 h-6"></i>
                 </div>
                 <span class="text-[10px] font-bold uppercase tracking-tighter">Deliveries</span>
             </a>

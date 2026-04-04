@@ -12,7 +12,7 @@ use App\Models\Vehicle;
 class Order extends Model
 {
     protected $fillable = [
-        'bon_id', 'driver_id', 'recipient_id', 'vehicle_id', 
+        'bon_id', 'bon_driver_id', 'driver_id', 'recipient_id', 'vehicle_id', 
         'code', 'qr_file', 'location', 'price', 
         'driver_commission', 'commission', 'vehicle_license_plate', 'status', 'lat', 'lng'
     ];

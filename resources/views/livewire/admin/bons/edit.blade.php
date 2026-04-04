@@ -1,50 +1,58 @@
 <?php
 
+use Livewire\Volt\Component;
 use App\Models\Bon;
 use App\Models\User;
-use Illuminate\Support\Str;
-use Livewire\Volt\Component;
-use Livewire\WithFileUploads;
 use Livewire\Attributes\Layout;
 
+new #[Layout('layouts.admin')] class extends Component {
+    public Bon $bon;
 
-new #[Layout('layouts.admin')] class extends Component
-{
-    use WithFileUploads;
     public $user_id;
-    public $status = 'pending';
-    public $payment_status = 'unpaid';
-    public $payment_method = 'cash';
-    public $delivery_type = 'standard';
+    public $status;
+    public $payment_status;
+    public $payment_method;
+    public $delivery_type;
     public $pickup_date;
     public $price;
     public $notes;
     public $code;
 
-    
+    public function mount(Bon $bon)
+    {
+        $this->bon = $bon;
+        $this->user_id = $bon->user_id;
+        $this->status = $bon->status;
+        $this->payment_status = $bon->payment_status;
+        $this->payment_method = $bon->payment_method;
+        $this->delivery_type = $bon->delivery_type;
+        // Since sqlite/mysql might return standard datetime, format for 'date' input
+        $this->pickup_date = $bon->pickup_date ? \Carbon\Carbon::parse($bon->pickup_date)->format('Y-m-d') : null;
+        $this->price = $bon->price;
+        $this->notes = $bon->notes;
+        $this->code = $bon->code;
+    }
 
     public function generateQrCode()
     {
         if (!$this->code) {
             $this->addError('code', 'Code is empty.');
-            return;
+            return '';
         }
 
-        $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($this->code);
-
-        return $qrUrl;
+        return 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($this->code);
     }
 
     public function save()
     {
         $this->validate([
             'user_id' => 'required|exists:users,id',
-            'code' => 'required|unique:bons,code',
+            'code' => 'required|unique:bons,code,' . $this->bon->id,
             'price' => 'required|numeric|min:0',
             'pickup_date' => 'nullable|date',
         ]);
 
-        Bon::create([
+        $this->bon->update([
             'code' => $this->code,
             'user_id' => $this->user_id,
             'status' => $this->status,
@@ -56,7 +64,7 @@ new #[Layout('layouts.admin')] class extends Component
             'notes' => $this->notes,
         ]);
 
-        session()->flash('success', 'Bon created successfully.');
+        session()->flash('status', 'Bon updated successfully.');
 
         return redirect()->route('admin.bons.index');
     }
@@ -67,20 +75,20 @@ new #[Layout('layouts.admin')] class extends Component
             'users' => User::where('role', 'client')->get(),
         ];
     }
-}
-?>
+}; ?>
+
 <div class="space-y-6">
     <x-slot name="header">
-        {{ __('Create Bon') }}
+        {{ __('Edit Bon') }}
     </x-slot>
 
     <x-slot name="breadcrump">
         <span class="flex items-center">
             <a href="{{ route('admin.dashboard') }}" class="hover:text-primary transition-colors text-gray-400">{{ __('Dashboard') }}</a>
             <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-gray-300"></i>
-            <a href="{{ route('admin.bons.index') }}" class="hover:text-primary transition-colors">{{ __('Bons') }}</a>
+            <a href="{{ route('admin.bons.index') }}" class="hover:text-primary transition-colors text-gray-400">{{ __('Bons') }}</a>
             <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-gray-300"></i>
-            <span class="text-text-main font-medium">{{ __('Create') }}</span>
+            <span class="text-text-main font-medium">{{ __('Edit') }} #{{ $bon->code }}</span>
         </span>
     </x-slot>
 
@@ -114,7 +122,6 @@ new #[Layout('layouts.admin')] class extends Component
                                     <button type="button" wire:click="generateQrCode" class="block w-full px-4 py-3 bg-primary border border-primary rounded-xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium text-white">Generate</button>
                                 </div>
                             </div>
-
 
                             <!-- Client -->
                             <div class="space-y-1">
@@ -211,7 +218,7 @@ new #[Layout('layouts.admin')] class extends Component
                         </h3>
                         
                         @php
-                            $qrUrl = $this->generateQrCode($this->code);
+                            $qrUrl = $this->generateQrCode();
                         @endphp
 
                         @if($qrUrl)
@@ -232,8 +239,8 @@ new #[Layout('layouts.admin')] class extends Component
                                 {{ __('Cancel') }}
                             </a>
                             <button type="submit" class="px-6 py-3 text-sm bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center">
-                                <i data-lucide="plus-circle" class="w-4 h-4 me-2"></i>
-                                {{ __('Create Bon') }}
+                                <i data-lucide="save" class="w-4 h-4 me-2"></i>
+                                {{ __('Save Changes') }}
                             </button>
                         </div>
                     </div>

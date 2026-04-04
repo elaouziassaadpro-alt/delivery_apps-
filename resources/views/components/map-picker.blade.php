@@ -17,8 +17,8 @@
                     <div class="space-y-6">
                         <div class="bg-gray-50 p-6 rounded-[2.5rem] flex flex-col items-center border border-gray-100">
                             <div class="w-32 h-32 bg-white p-2 rounded-2xl shadow-sm border flex items-center justify-center overflow-hidden">
-                                <template x-if="order && order.qr_file">
-                                    <img :src="'/storage/' + order.qr_file" class="w-full h-full object-contain">
+                                <template x-if="order && order.code">
+                                    <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent('Order: ' + order.code)" alt="QR Code" class="w-full h-full object-contain">
                                 </template>
                             </div>
                             <p class="mt-2 text-[10px] font-black text-gray-400">TRACKING QR</p>

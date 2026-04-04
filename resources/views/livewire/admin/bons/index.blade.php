@@ -12,12 +12,35 @@ new #[Layout('layouts.admin')] class extends Component
 
     #[Url(history: true)]
     public $search = '';
+    public $showBonDetails = false;
+    public $bon = null;
+
 
     public function updatingSearch() { $this->resetPage(); }
 
     public function showBon($id)
     {
-        return redirect()->route('admin.bons.show', $id);
+        $bon = Bon::with(['user', 'orders'])->findOrFail($id);
+        $this->bon = $bon;
+        $this->showBonDetails = true;
+        
+        
+    }
+    public function generateQrCode()
+    {
+        if (!$this->bon || !$this->bon->code) {
+            return '';
+        }
+
+        $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($this->bon->code);
+
+        return $qrUrl;
+    }
+
+    public function closeBonDetails()
+    {
+        $this->showBonDetails = false;
+        $this->bon = null;
     }
 
     public function editBon($id)
@@ -37,14 +60,13 @@ new #[Layout('layouts.admin')] class extends Component
     {
         return [
             'bons' => Bon::query()
-                ->with(['client.user', 'orders'])
-                ->when($this->search, function($query) {
-                    $query->where(function($q) {
-                        $q->where('code', 'like', '%' . $this->search . '%')
-                          ->orWhereHas('client.user', function($q2) {
-                              $q2->where('name', 'like', '%' . $this->search . '%');
+                ->with(['user', 'orders'])
+                ->where(function($query) {
+                    $searchTerm = '%' . $this->search . '%';
+                    $query->where('code', 'like', $searchTerm)
+                          ->orWhereHas('user', function($q2) use ($searchTerm) {
+                              $q2->where('name', 'like', $searchTerm);
                           });
-                    });
                 })
                 ->latest()
                 ->paginate(10),
@@ -110,7 +132,7 @@ new #[Layout('layouts.admin')] class extends Component
                                 <span class="text-sm font-bold text-gray-600">{{ $bon->created_at->format('d M Y') }}</span>
                             </td>
                             <td class="px-8 py-5">
-                                <p class="text-sm font-bold text-gray-900">{{ $bon->client->user->name ?? 'N/A' }}</p>
+                                <p class="text-sm font-bold text-gray-900">{{ $bon->user->name ?? 'N/A' }}</p>
                             </td>
                             <td class="px-8 py-5 text-sm text-gray-500">
                                 {{ $bon->orders->count() }} orders
@@ -134,15 +156,27 @@ new #[Layout('layouts.admin')] class extends Component
                             </td>
                             <td class="px-8 py-5 text-right">
                                 <div class="flex items-center justify-end space-x-2">
-                                    <button wire:click="showBon({{ $bon->id }})" class="p-2.5 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all" title="{{ __('View') }}">
-                                        <i data-lucide="eye" class="w-5 h-5"></i>
-                                    </button>
-                                    <button wire:click="editBon({{ $bon->id }})" class="p-2.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all" title="{{ __('Edit') }}">
-                                        <i data-lucide="edit-3" class="w-5 h-5"></i>
-                                    </button>
-                                    <button wire:click="deleteBon({{ $bon->id }})" wire:confirm="{{ __('Are you sure you want to delete this bon?') }}" class="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" title="{{ __('Delete') }}">
-                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                                    </button>
+                                    <button wire:click="showBon({{ $bon->id }})" 
+                                        class="p-2 text-gray-400 hover:text-primary transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </button>
+
+                                <button wire:click="deleteBon({{ $bon->id }})" 
+                                        wire:confirm="Are you sure?" 
+                                        class="p-2 text-gray-400 hover:text-red-500 transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>
+                                    </svg>
+                                </button>
+
+                                <button wire:click="editBon({{ $bon->id }})" 
+                                        class="p-2 text-gray-400 hover:text-blue-500 transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                    </svg>
+                                </button>
                                 </div>
                             </td>
                         </tr>
@@ -169,6 +203,72 @@ new #[Layout('layouts.admin')] class extends Component
             </div>
         @endif
     </div>
+    @if($showBonDetails && $bon)
+    <div class="fixed inset-0 z-[100] overflow-y-auto">
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" wire:click="closeBonDetails"></div>
+
+        <div class="flex items-center justify-center min-h-screen p-4 pointer-events-none">
+            <div class="relative bg-white rounded-[3rem] shadow-2xl max-w-4xl w-full p-10 overflow-hidden pointer-events-auto">
+                <button wire:click="closeBonDetails" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x"></i>
+                </button>
+
+                <div class="space-y-8">
+                    <div>
+                        <h2 class="text-2xl font-bold">{{ __('Bon Details') }} <span class="text-primary">#{{ $bon->code }}</span></h2>
+                        <p class="text-gray-400 text-sm mt-1">{{ __('Created on') }} {{ $bon->created_at->format('d M Y, H:i') }}</p>
+
+                    </div>
+                    <div class="flex justify-center">
+                        <img src="{{ $this->generateQrCode() }}" alt="QR Code" class="w-32 h-32">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="bg-gray-50 p-6 rounded-[2rem] border border-gray-100">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">{{ __('Client') }}</label>
+                            <p class="font-bold text-gray-900">{{ $bon->user->name ?? 'N/A' }}</p>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-[2rem] border border-gray-100">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">{{ __('Total Amount') }}</label>
+                            <p class="font-black text-gray-900 text-lg">{{ number_format($bon->price ?? 0, 2) }} DH</p>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-[2rem] border border-gray-100">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">{{ __('Status') }}</label>
+                            <span class="px-3 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest bg-gray-100 text-gray-800">
+                                {{ $bon->status }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-bold mb-4">{{ __('Orders') }} ({{ $bon->orders->count() }})</h3>
+                        <div class="bg-gray-50 rounded-2xl p-4 overflow-x-auto border border-gray-100">
+                            @if($bon->orders->isNotEmpty())
+                                <table class="w-full text-left text-sm">
+                                    <thead>
+                                        <tr>
+                                            <th class="pb-3 text-gray-400 font-bold">{{ __('Code') }}</th>
+                                            <th class="pb-3 text-gray-400 font-bold">{{ __('Status') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        @foreach($bon->orders as $order)
+                                            <tr>
+                                                <td class="py-3 font-bold text-gray-900">{{ $order->code }}</td>
+                                                <td class="py-3">{{ $order->status }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            @else
+                                <p class="text-gray-400 py-4 text-center">{{ __('No orders associated with this bon.') }}</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     @if (session('status'))
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)" class="fixed bottom-8 right-8 p-4 bg-emerald-600 text-white rounded-2xl shadow-2xl flex items-center z-50 animate-in slide-in-from-bottom-8">
