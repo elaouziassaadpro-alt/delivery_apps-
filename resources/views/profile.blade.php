@@ -5,7 +5,7 @@
 
     <x-slot name="breadcrump">
         <span class="flex items-center">
-            <a href="{{ route('dashboard') }}" class="hover:text-primary transition-colors text-gray-400">Dashboard</a>
+            <a href="{{ route('admin.dashboard') }}" class="hover:text-primary transition-colors text-gray-400">Dashboard</a>
             <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-gray-300"></i>
             <span class="text-text-main font-medium">My Profile</span>
         </span>
