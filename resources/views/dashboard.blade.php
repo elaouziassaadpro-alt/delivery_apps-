@@ -19,7 +19,7 @@
     $mappedOrders = collect([]);
     try {
         $mappedOrders = \App\Models\Order::whereNotNull('lat')->whereNotNull('lng')
-            ->with('bon.client.user') 
+            ->with('bon.user') 
             ->get(['id', 'code', 'lat', 'lng', 'status', 'bon_id', 'location'])
             ->map(fn($o) => [
                 'id'       => $o->id,
@@ -28,7 +28,7 @@
                 'code'     => (string)($o->code ?? 'N/A'),
                 'status'   => strtolower((string)($o->status ?? 'pending')),
                 'location' => (string)($o->location ?? 'Unknown'),
-                'client'   => $o->bon?->client?->user?->name ?? 'N/A'
+                'client'   => $o->bon?->user?->name ?? 'N/A'
             ]);
     } catch (\Throwable $e) {
         \Illuminate\Support\Facades\Log::error('Dashboard map query failed: ' . $e->getMessage());
