@@ -16,18 +16,23 @@
         $stats = ['total' => 0, 'pending' => 0, 'revenue' => 0.0, 'cancelled' => 0];
     }
 
-    $mappedOrders = \App\Models\Order::whereNotNull('lat')->whereNotNull('lng')
-        ->with('bon.client.user') 
-        ->get(['id', 'code', 'lat', 'lng', 'status', 'bon_id', 'location'])
-        ->map(fn($o) => [
-            'id' => $o->id,
-            'lat' => (float)($o->lat ?? 0),
-            'lng' => (float)($o->lng ?? 0),
-            'code' => (string)($o->code ?? 'N/A'),
-            'status' => strtolower((string)($o->status ?? 'pending')),
-            'location' => (string)($o->location ?? 'Unknown'),
-            'client' => $o->bon?->client?->user?->name ?? 'N/A'
-        ]);
+    $mappedOrders = collect([]);
+    try {
+        $mappedOrders = \App\Models\Order::whereNotNull('lat')->whereNotNull('lng')
+            ->with('bon.client.user') 
+            ->get(['id', 'code', 'lat', 'lng', 'status', 'bon_id', 'location'])
+            ->map(fn($o) => [
+                'id'       => $o->id,
+                'lat'      => (float)($o->lat ?? 0),
+                'lng'      => (float)($o->lng ?? 0),
+                'code'     => (string)($o->code ?? 'N/A'),
+                'status'   => strtolower((string)($o->status ?? 'pending')),
+                'location' => (string)($o->location ?? 'Unknown'),
+                'client'   => $o->bon?->client?->user?->name ?? 'N/A'
+            ]);
+    } catch (\Throwable $e) {
+        \Illuminate\Support\Facades\Log::error('Dashboard map query failed: ' . $e->getMessage());
+    }
 
     $weeklyData = collect(range(0, 6))->map(function($i) {
         $date = now()->subDays(6 - $i)->format('Y-m-d');
@@ -445,6 +450,5 @@
             };
         };
     </script>
-    @endpush
+@endpush
 </x-admin-layout>
-```
