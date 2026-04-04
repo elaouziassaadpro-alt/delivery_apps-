@@ -3,13 +3,9 @@
 use App\Models\Vehicle;
 use App\Models\Manager;
 use Livewire\Volt\Component;
+use Livewire\Attributes\Layout;
 
-new class extends Component {
-    public function layout()
-    {
-        return 'layouts.admin';
-    }
-
+new #[Layout('layouts.admin')] class extends Component {
     public Vehicle $vehicle;
 
     // Form Fields

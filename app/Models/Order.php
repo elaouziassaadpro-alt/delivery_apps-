@@ -38,20 +38,6 @@ class Order extends Model
         return $this->belongsTo(Bon::class);
     }
 
-    /**
-     * Get the client associated with the order through the Bon.
-     */
-    public function client()
-    {
-        return $this->hasOneThrough(
-            Client::class,
-            Bon::class,
-            'id',          // Foreign key on the "through" (Bon) table...
-            'id',          // Foreign key on the "target" (Client) table...
-            'bon_id',      // Local key on the "owner" (Order) table...
-            'client_id'    // Local key on the "through" (Bon) table...
-        );
-    }
 
     public function driver()
     {

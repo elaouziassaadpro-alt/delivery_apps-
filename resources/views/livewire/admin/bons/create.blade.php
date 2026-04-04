@@ -1,18 +1,17 @@
 <?php
 
 use App\Models\Bon;
-use App\Models\Client;
+use App\Models\User;
 use Illuminate\Support\Str;
 use Livewire\Volt\Component;
+use Livewire\WithFileUploads;
+use Livewire\Attributes\Layout;
 
-new class extends Component
+
+new #[Layout('layouts.admin')] class extends Component
 {
-    public function layout()
-    {
-        return 'layouts.admin';
-    }
-
-    public $client_id;
+    use WithFileUploads;
+    public $user_id;
     public $status = 'pending';
     public $payment_status = 'unpaid';
     public $payment_method = 'cash';
@@ -40,14 +39,14 @@ new class extends Component
     public function save()
     {
         $this->validate([
-            'client_id' => 'required|exists:clients,id',
+            'user_id' => 'required|exists:users,id',
             'price' => 'required|numeric|min:0',
             'pickup_date' => 'nullable|date',
         ]);
 
         Bon::create([
             'code' => $this->code,
-            'client_id' => $this->client_id,
+            'user_id' => $this->user_id,
             'status' => $this->status,
             'payment_status' => $this->payment_status,
             'payment_method' => $this->payment_method,
@@ -65,7 +64,7 @@ new class extends Component
     public function with(): array
     {
         return [
-            'clients' => Client::with('user')->get(),
+            'users' => User::where('role', 'client')->get(),
         ];
     }
 }
@@ -120,13 +119,13 @@ new class extends Component
                             <!-- Client -->
                             <div class="space-y-1">
                                 <label class="text-xs uppercase tracking-widest font-bold text-gray-400">Client</label>
-                                <select wire:model="client_id" class="block w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium">
+                                <select wire:model="user_id" class="block w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium">
                                     <option value="">{{ __('Select client') }}</option>
-                                    @foreach($clients as $client)
-                                        <option value="{{ $client->id }}">{{ $client->user->name }}</option>
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
                                     @endforeach
                                 </select>
-                                <x-input-error :messages="$errors->get('client_id')" />
+                                <x-input-error :messages="$errors->get('user_id')" />
                             </div>
 
                             <!-- Price -->

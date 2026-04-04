@@ -15,11 +15,14 @@ class OrdersTable extends Component
     public function render()
     {
         return view('livewire.admin.orders-table', [
-            'orders' => Order::with('bon.client.user')
+            'orders' => Order::with('bon.user')
+                ->whereHas('bon.user', function($q) {
+                    $q->where('role', 'client');
+                })
                 ->when($this->search, function($query) {
                     $query->where(function($q) {
                         $q->where('code', 'like', '%' . $this->search . '%')
-                          ->orWhereHas('bon.client.user', function($sq) {
+                          ->orWhereHas('bon.user', function($sq) {
                               $sq->where('name', 'like', '%' . $this->search . '%');
                           });
                     });

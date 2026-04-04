@@ -10,15 +10,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
+use Livewire\Attributes\Layout;
 
-new class extends Component
+new #[Layout('layouts.admin')] class extends Component
 {
     use WithFileUploads;
-
-    public function layout()
-    {
-        return 'layouts.admin';
-    }
 
     public string $name = '';
     public string $email = '';

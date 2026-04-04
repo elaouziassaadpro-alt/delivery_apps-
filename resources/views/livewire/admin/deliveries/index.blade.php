@@ -3,22 +3,18 @@
 use App\Models\Order;
 use Livewire\Volt\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\Layout;
 
-new class extends Component
+new #[Layout('layouts.admin')] class extends Component
 {
     use WithPagination;
-
-    public function layout()
-    {
-        return 'layouts.admin';
-    }
 
     public string $search = '';
 
     public function with()
     {
         return [
-            'orders' => Order::with(['recipient', 'client.user', 'driver.user'])
+            'orders' => Order::with(['recipient', 'bon.user', 'driver.user'])
                 ->where(function($query) {
                     $searchTerm = '%' . $this->search . '%';
                     $query->where('code', 'like', $searchTerm)
@@ -26,7 +22,7 @@ new class extends Component
                               $q->where('first_name', 'like', $searchTerm)
                                 ->orWhere('last_name', 'like', $searchTerm);
                           })
-                          ->orWhereHas('client.user', function($q) use ($searchTerm) {
+                          ->orWhereHas('bon.user', function($q) use ($searchTerm) {
                               $q->where('name', 'like', $searchTerm);
                           });
                 })
@@ -54,7 +50,7 @@ new class extends Component
 
     public function viewOrder(int $id)
     {
-        $order = Order::with(['recipient', 'client.user', 'driver.user', 'vehicle'])->findOrFail($id);
+        $order = Order::with(['recipient', 'bon.user', 'driver.user', 'vehicle'])->findOrFail($id);
         $this->dispatch('open-order-details', order: $order);
     }
 }; ?>
@@ -67,7 +63,7 @@ new class extends Component
 
     <x-slot name="breadcrump">
         <span class="flex items-center text-sm">
-            <a href="{{ route('dashboard') }}" class="hover:text-primary transition-colors text-gray-400">Dashboard</a>
+            <a href="{{ route('admin.dashboard') }}" class="hover:text-primary transition-colors text-gray-400">Dashboard</a>
             <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-gray-300"></i>
             <span class="text-text-main font-bold">Deliveries</span>
         </span>

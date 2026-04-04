@@ -3,14 +3,10 @@
 use App\Models\Vehicle;
 use App\Models\Manager;
 use Livewire\Volt\Component;
+use Livewire\Attributes\Layout;
 
-new class extends Component 
+new #[Layout('layouts.admin')] class extends Component 
 {
-    public function layout()
-    {
-        return 'layouts.admin';
-    }
-
     public string $registration_card = '';
     public string $license_plate = '';
     public string $make = '';

@@ -4,15 +4,11 @@ use App\Models\User;
 use Livewire\Volt\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
 
-new class extends Component
+new #[Layout('layouts.admin')] class extends Component
 {
     use WithPagination;
-
-    public function layout()
-    {
-        return 'layouts.admin';
-    }
 
     public string $search = '';
 

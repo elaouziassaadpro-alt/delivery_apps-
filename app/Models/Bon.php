@@ -10,7 +10,7 @@ class Bon extends Model
 {
     protected $fillable = [
         'code',
-        'client_id',
+        'user_id',
         'status',
         'payment_status',
         'payment_method',
@@ -27,11 +27,11 @@ class Bon extends Model
     ];
 
     /**
-     * Get the client associated with the Bon.
+     * Get the user associated with the Bon.
      */
-    public function client(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Client::class);
+        return $this->belongsTo(User::class);
     }
 
     /**
