@@ -76,7 +76,7 @@ new #[Layout('layouts.admin')] class extends Component
 
     <x-slot name="breadcrump">
         <span class="flex items-center">
-            <a href="{{ route('dashboard') }}" class="hover:text-primary transition-colors text-gray-400">{{ __('Dashboard') }}</a>
+            <a href="{{ route('admin.dashboard') }}" class="hover:text-primary transition-colors text-gray-400">{{ __('Dashboard') }}</a>
             <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-gray-300"></i>
             <a href="{{ route('admin.bons.index') }}" class="hover:text-primary transition-colors">{{ __('Bons') }}</a>
             <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-gray-300"></i>
