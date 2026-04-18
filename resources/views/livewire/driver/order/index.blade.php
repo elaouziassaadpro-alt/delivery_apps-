@@ -7,21 +7,34 @@ use Illuminate\Support\Facades\Auth;
 
 new #[Layout('layouts.driver')] class extends Component
 {
-    public $orders;
+    use Livewire\WithPagination;
+
+    public string $status = 'pending';
     public string $scanCode = '';
     public ?string $scanError = null;
 
-    public function mount()
+    public function updatingStatus()
     {
-        $this->loadOrders();
+        $this->resetPage();
     }
 
-    public function loadOrders()
+    public function with(): array
     {
-        $this->orders = Order::with(['recipient', 'bon'])
-            ->where('driver_id', Auth::user()->driver->id)
-            ->latest()
-            ->get();
+        $baseQuery = Order::where('driver_id', Auth::user()->driver->id);
+        
+        return [
+            'orders' => (clone $baseQuery)
+                ->with(['recipient', 'bon'])
+                ->when($this->status !== 'all', fn($q) => $q->where('status', $this->status))
+                ->latest()
+                ->paginate(10),
+            'stats' => [
+                'total' => (clone $baseQuery)->count(),
+                'pending' => (clone $baseQuery)->where('status', 'pending')->count(),
+                'in_transit' => (clone $baseQuery)->where('status', 'In Transit')->count(),
+                'delivered' => (clone $baseQuery)->where('status', 'delivered')->count(),
+            ]
+        ];
     }
 
     public function findOrderByCode()
@@ -59,6 +72,23 @@ new #[Layout('layouts.driver')] class extends Component
         </div>
         
         <div class="flex items-center gap-4 w-full md:w-auto">
+            <div class="relative flex-1 md:w-48">
+                <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i data-lucide="filter" class="text-gray-400 w-4 h-4"></i>
+                </span>
+                <select wire:model.live="status" class="block w-full pl-10 pr-10 py-4 bg-white border border-gray-100 rounded-[1.5rem] shadow-sm focus:ring-4 focus:ring-primary/10 transition-all text-sm font-bold appearance-none">
+                    <option value="all">{{ __('All Orders') }}</option>
+                    <option value="pending">{{ __('Pending') }}</option>
+                    <option value="assigned">{{ __('Assigned') }}</option>
+                    <option value="In Transit">{{ __('In Transit') }}</option>
+                    <option value="delivered">{{ __('Delivered') }}</option>
+                    <option value="returned">{{ __('Returned') }}</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                    <i data-lucide="chevron-down" class="text-gray-400 w-4 h-4"></i>
+                </div>
+            </div>
+
             <button 
                 wire:click="$dispatch('open-order-scanner')" 
                 class="group relative flex items-center justify-center space-x-3 px-6 py-4 bg-primary text-white rounded-[1.5rem] font-bold text-sm shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
@@ -78,7 +108,7 @@ new #[Layout('layouts.driver')] class extends Component
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">Total Orders</p>
-                    <p class="text-3xl font-black text-gray-900 mt-2">{{ $orders->count() }}</p>
+                    <p class="text-3xl font-black text-gray-900 mt-2">{{ $stats['total'] }}</p>
                 </div>
                 <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-300">
                     <i data-lucide="package" class="w-7 h-7"></i>
@@ -90,7 +120,7 @@ new #[Layout('layouts.driver')] class extends Component
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">Pending</p>
-                    <p class="text-3xl font-black text-gray-900 mt-2">{{ $orders->where('status', 'pending')->count() }}</p>
+                    <p class="text-3xl font-black text-gray-900 mt-2">{{ $stats['pending'] }}</p>
                 </div>
                 <div class="w-14 h-14 bg-yellow-500/10 rounded-2xl flex items-center justify-center text-yellow-500 group-hover:scale-110 transition-transform duration-300">
                     <i data-lucide="clock" class="w-7 h-7"></i>
@@ -102,7 +132,7 @@ new #[Layout('layouts.driver')] class extends Component
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">In Transit</p>
-                    <p class="text-3xl font-black text-gray-900 mt-2">{{ $orders->where('status', 'In Transit')->count() }}</p>
+                    <p class="text-3xl font-black text-gray-900 mt-2">{{ $stats['in_transit'] }}</p>
                 </div>
                 <div class="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform duration-300">
                     <i data-lucide="truck" class="w-7 h-7"></i>
@@ -114,7 +144,7 @@ new #[Layout('layouts.driver')] class extends Component
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">Delivered</p>
-                    <p class="text-3xl font-black text-gray-900 mt-2">{{ $orders->where('status', 'delivered')->count() }}</p>
+                    <p class="text-3xl font-black text-gray-900 mt-2">{{ $stats['delivered'] }}</p>
                 </div>
                 <div class="w-14 h-14 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-500 group-hover:scale-110 transition-transform duration-300">
                     <i data-lucide="check-circle" class="w-7 h-7"></i>
@@ -206,6 +236,12 @@ new #[Layout('layouts.driver')] class extends Component
                 </tbody>
             </table>
         </div>
+
+        @if($orders->hasPages())
+            <div class="px-8 py-6 border-t border-gray-100 bg-gray-50/30">
+                {{ $orders->links() }}
+            </div>
+        @endif
     </div>
 
     <!-- Order Scanner Modal -->
