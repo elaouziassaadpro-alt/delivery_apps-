@@ -24,6 +24,7 @@ new #[Layout('layouts.admin')] class extends Component
 
     public bool $is_active = true;
     public $photo;
+    public string $password = '';
 
     // Client fields
     public string $address = '';
@@ -94,6 +95,7 @@ new #[Layout('layouts.admin')] class extends Component
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($this->user->id)],
             'role' => ['required', 'string', 'in:client,driver,manager,admin'],
             'is_active' => ['required', 'boolean'],
+            'password' => ['nullable', 'string', 'min:8'],
 
             'photo' => ['nullable', 'image', 'max:1024'],
         ];
@@ -139,12 +141,18 @@ new #[Layout('layouts.admin')] class extends Component
             }
 
             // 2. Update Basic User Info
-            $this->user->update([
+            $updateData = [
                 'name' => $this->name,
                 'email' => $this->email,
                 'role' => $this->role,
                 'is_active' => $this->is_active,
-            ]);
+            ];
+
+            if ($this->password) {
+                $updateData['password'] = Hash::make($this->password);
+            }
+
+            $this->user->update($updateData);
 
 
             // 3. Update Role Specific Details
@@ -299,6 +307,15 @@ new #[Layout('layouts.admin')] class extends Component
                                     <input wire:model="email" type="email" class="block w-full pl-12 pr-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium">
                                 </div>
                                 <x-input-error :messages="$errors->get('email')" />
+                            </div>
+
+                            <div class="pt-4 border-t border-gray-50 space-y-2">
+                                <label class="text-[10px] uppercase tracking-widest font-black text-gray-400">Update Password (Optional)</label>
+                                <div class="relative">
+                                    <i data-lucide="key-round" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                                    <input wire:model="password" type="password" placeholder="Leave blank to keep current" class="block w-full pl-12 pr-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium">
+                                </div>
+                                <x-input-error :messages="$errors->get('password')" />
                             </div>
                         </div>
                     </div>
