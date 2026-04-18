@@ -69,13 +69,18 @@ new #[Layout('layouts.driver')] class extends Component {
         session()->flash('status', 'Profile Information Updated.');
     }
 
+    public function updatedPhoto(): void
+    {
+        $this->updatePhoto();
+    }
+
     public function updatePhoto(): void
     {
         $this->validate([
             'photo' => ['image', 'max:2048'],
         ]);
 
-        $path = $this->photo->store('profiles', 'public');
+        $path = $this->photo->store('profiles', 'private');
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $user->update(['photo' => $path]);
@@ -138,7 +143,7 @@ new #[Layout('layouts.driver')] class extends Component {
 
                     <label for="profile-photo" class="absolute -bottom-4 -right-4 w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary/30 cursor-pointer hover:scale-110 active:scale-95 transition-all group/cam">
                         <i data-lucide="camera" class="w-5 h-5 group-hover/cam:rotate-12 transition-transform"></i>
-                        <input wire:model="photo" wire:change="updatePhoto" id="profile-photo" type="file" class="sr-only">
+                        <input wire:model="photo" id="profile-photo" type="file" class="sr-only">
                     </label>
                 </div>
 
