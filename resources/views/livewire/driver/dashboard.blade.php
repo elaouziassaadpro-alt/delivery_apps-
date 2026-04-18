@@ -116,11 +116,11 @@
                         </div>
 
                         <div class="space-y-4">
-                            <a href="{{ route('driver.bons.index') }}" 
+                            <a href="{{ route('driver.orders.index') }}" 
                                wire:navigate
                                class="flex items-center justify-center space-x-3 w-full bg-primary hover:bg-primary/90 text-white font-black py-4 rounded-2xl transition-all shadow-lg shadow-primary/20 group">
                                 <i data-lucide="qr-code" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
-                                <span>Scan New Order</span>
+                                <span>Scan Order</span>
                             </a>
                             <a href="{{ route('driver.profile') }}" 
                                wire:navigate
