@@ -2,19 +2,31 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Validation\ValidationException;
-use App\Models\Client;
-use App\Models\Driver;
-use App\Models\Recipient;
-use App\Models\Vehicle;
 
 class Order extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'bon_id', 'bon_driver_id', 'driver_id', 'recipient_id', 'vehicle_id', 
-        'code', 'qr_file', 'location', 'price', 
-        'driver_commission', 'commission', 'vehicle_license_plate', 'status', 'lat', 'lng'
+        'bon_id', 
+        'bon_driver_id', 
+        'driver_id', 
+        'recipient_id', 
+        'vehicle_id', 
+        'code', 
+        'qr_file', 
+        'location', 
+        'price', 
+        'driver_commission', 
+        'commission', 
+        'vehicle_license_plate', 
+        'status', 
+        'lat', 
+        'lng'
     ];
 
     protected static function boot()
@@ -22,35 +34,52 @@ class Order extends Model
         parent::boot();
 
         static::creating(function ($order) {
-            if (self::where('code', $order->code)->exists()) {
+            // Check if code exists; though a database UNIQUE constraint is safer
+            if (static::where('code', $order->code)->exists()) {
                 throw ValidationException::withMessages([
-                    'code' => 'The code already exists.'
+                    'code' => 'The order code must be unique.'
                 ]);
             }
         });
     }
 
     /**
-     * Get the bon that owns the order.
+     * Relationships
      */
-    public function bon()
+
+    public function bon(): BelongsTo
     {
         return $this->belongsTo(Bon::class);
     }
 
-
-    public function driver()
+    public function driver(): BelongsTo
     {
         return $this->belongsTo(Driver::class);
     }
 
-    public function recipient()
+    public function recipient(): BelongsTo
     {
         return $this->belongsTo(Recipient::class);
     }
 
-    public function vehicle()
+    public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    public function bonDriver(): BelongsTo
+    {
+        // Explicitly defining the foreign key 'bon_driver_id'
+        return $this->belongsTo(Bon::class, 'bon_driver_id');
+    }
+    public function color()
+    {
+        return match($this->status) {
+            'completed'  => 'bg-green-100 text-green-800 outline-green-200',
+            'pending'    => 'bg-yellow-100 text-yellow-800 outline-yellow-200',
+            'In Transit' => 'bg-blue-100 text-blue-800 outline-blue-200',
+            'cancelled'  => 'bg-red-100 text-red-800 outline-red-200',
+            default      => 'bg-gray-100 text-gray-800 outline-gray-200',
+        };
     }
 }

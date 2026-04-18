@@ -72,6 +72,11 @@ Route::middleware(['auth'])->group(function () {
             Volt::route('/bons/{bon}', 'admin.bons.show')->name('bons.show');
             Volt::route('/bons/{bon}/edit', 'admin.bons.edit')->name('bons.edit');
             Volt::route('/bons/{bon}/delete', 'admin.bons.delete')->name('bons.delete');
+
+            Volt::route('/bons-driver', 'admin.bons.index-driver')->name('bons.index-driver');
+            Volt::route('/bons-driver/{bon}', 'admin.bons.show-driver')->name('bons.show-driver');
+            Volt::route('/bons-driver/{bon}/edit', 'admin.bons.edit-driver')->name('bons.edit-driver');
+            Volt::route('/bons-driver/{bon}/delete', 'admin.bons.delete-driver')->name('bons.delete-driver');
         });
 
     /*
@@ -87,7 +92,6 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', App\Livewire\Driver\Dashboard::class)->name('dashboard');
             Volt::route('/profile', 'driver.profile')->name('profile');
             Volt::route('/bons', 'driver.bon.index')->name('bons.index');
-            Volt::route('/bons/create', 'driver.bon.create')->name('bons.create');
             Volt::route('/bons/{bon}', 'driver.bon.show')->name('bons.show');
             Volt::route('/bons/{bon}/edit', 'driver.bon.edit')->name('bons.edit');
             Volt::route('/bons/{bon}/delete', 'driver.bon.delete')->name('bons.delete');

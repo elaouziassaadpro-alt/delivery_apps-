@@ -77,7 +77,7 @@ new #[Layout('layouts.driver')] class extends Component
         if ($this->order && strtolower($this->order->status) === 'pending') {
             $this->order->update([
                 'driver_id' => $driver->id,
-                'status' => 'assigned',
+                'status' => 'In Transit',
                 'bon_driver_id' => $this->activeBonId ?? null,
             ]);
             

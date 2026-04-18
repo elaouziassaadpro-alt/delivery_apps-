@@ -10,6 +10,7 @@ new #[Layout('layouts.admin')] class extends Component
     use WithPagination;
 
     public string $search = '';
+    public string $status = '';
     public function with()
     {
         return [
@@ -25,12 +26,20 @@ new #[Layout('layouts.admin')] class extends Component
                               $q->where('name', 'like', $searchTerm);
                           });
                 })
+                ->when($this->status !== '', function ($query) {
+                    $query->where('status', $this->status);
+                })
                 ->latest()
                 ->paginate(10),
         ];
     }
 
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingStatus()
     {
         $this->resetPage();
     }
@@ -75,12 +84,30 @@ new #[Layout('layouts.admin')] class extends Component
     </x-slot>
 
     <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
-        <div class="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="relative w-full md:w-96">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <i data-lucide="search" class="text-gray-400 w-5 h-5"></i>
-                </span>
-                <input wire:model.live.debounce.300ms="search" type="text" class="block w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium" placeholder="Search code, name...">
+        <div class="p-8 border-b border-gray-50 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div class="flex flex-col md:flex-row items-center gap-4 flex-1">
+                <div class="relative w-full md:w-96">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="search" class="text-gray-400 w-5 h-5"></i>
+                    </span>
+                    <input wire:model.live.debounce.300ms="search" type="text" class="block w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium" placeholder="Search code, name...">
+                </div>
+
+                <div class="relative w-full md:w-48">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="filter" class="text-gray-400 w-4 h-4"></i>
+                    </span>
+                    <select wire:model.live="status" class="block w-full pl-10 pr-10 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium appearance-none">
+                        <option value="">{{ __('All Status') }}</option>
+                        <option value="delivered">{{ __('Delivered') }}</option>
+                        <option value="pending">{{ __('Pending') }}</option>
+                        <option value="cancelled">{{ __('Cancelled') }}</option>
+                        <option value="In Transit">{{ __('In Transit') }}</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                        <i data-lucide="chevron-down" class="text-gray-400 w-4 h-4"></i>
+                    </div>
+                </div>
             </div>
 
             <div class="flex items-center space-x-2 text-sm text-gray-500 font-medium">
@@ -119,7 +146,7 @@ new #[Layout('layouts.admin')] class extends Component
                                         default => 'bg-gray-100 text-gray-500 border-gray-200'
                                     };
                                 @endphp
-                                <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase border {{ $style }}">
+                                <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase border {{ $order->color() }}">
                                     {{ $order->status }}
                                 </span>
                             </td>

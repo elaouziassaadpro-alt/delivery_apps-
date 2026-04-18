@@ -8,9 +8,13 @@ use Livewire\WithFileUploads;
 use Livewire\Attributes\Layout;
 
 
-new #[Layout('layouts.admin')] class extends Component
+
+
+
+new #[Layout('layouts.admin')] class extends Component 
 {
     use WithFileUploads;
+
     public $user_id;
     public $status = 'pending';
     public $payment_status = 'unpaid';
@@ -20,19 +24,35 @@ new #[Layout('layouts.admin')] class extends Component
     public $price;
     public $notes;
     public $code;
+    public $role = 'client';
+    public $users = [];
 
-    
+    public function mount()
+    {
+        $this->loadUsers();
+
+    }
+
+    // Automatically called by Livewire when $role changes
+    public function updatedRole()
+    {
+        $this->loadUsers();
+        $this->user_id = null; // reset user selection
+    }
+
+    private function loadUsers()
+    {
+        $this->users = User::where('role', $this->role)->get();
+    }
 
     public function generateQrCode()
     {
         if (!$this->code) {
             $this->addError('code', 'Code is empty.');
-            return;
+            return null;
         }
 
-        $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($this->code);
-
-        return $qrUrl;
+        return 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($this->code);
     }
 
     public function save()
@@ -57,18 +77,13 @@ new #[Layout('layouts.admin')] class extends Component
         ]);
 
         session()->flash('success', 'Bon created successfully.');
-
         return redirect()->route('admin.bons.index');
     }
 
-    public function with(): array
-    {
-        return [
-            'users' => User::where('role', 'client')->get(),
-        ];
-    }
+    
 }
 ?>
+
 <div class="space-y-6">
     <x-slot name="header">
         {{ __('Create Bon') }}
@@ -116,16 +131,34 @@ new #[Layout('layouts.admin')] class extends Component
                             </div>
 
 
-                            <!-- Client -->
-                            <div class="space-y-1">
-                                <label class="text-xs uppercase tracking-widest font-bold text-gray-400">Client</label>
-                                <select wire:model="user_id" class="block w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium">
-                                    <option value="">{{ __('Select client') }}</option>
-                                    @foreach($users as $user)
-                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                    @endforeach
-                                </select>
-                                <x-input-error :messages="$errors->get('user_id')" />
+                            <!-- Client / Driver selection -->
+                            <div class="space-y-1 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-1">
+                                    <label class="text-xs uppercase tracking-widest font-bold text-gray-400">user type</label>
+                                    <select wire:model.live="role" 
+                                            class="block w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl 
+                                                focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium">
+                                        <option value="">{{ __('Select type') }}</option>
+                                        <option value="client">{{ __('Client') }}</option>
+                                        <option value="driver">{{ __('Driver') }}</option>
+                                    </select>
+                                    <x-input-error :messages="$errors->get('role')" />
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-xs uppercase tracking-widest font-bold text-gray-400">User</label>
+                                    <select wire:model="user_id" class="block w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium">
+                                        @if($this->role == 'client')
+                                            <option value="">{{ __('Select client') }}</option>
+                                        @else
+                                            <option value="">{{ __('Select driver') }}</option>
+                                        @endif
+                                        @foreach($users as $user)
+                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('user_id')" />
+                                </div>
                             </div>
 
                             <!-- Price -->
@@ -211,7 +244,7 @@ new #[Layout('layouts.admin')] class extends Component
                         </h3>
                         
                         @php
-                            $qrUrl = $this->generateQrCode($this->code);
+                            $qrUrl = $this->generateQrCode();
                         @endphp
 
                         @if($qrUrl)

@@ -102,7 +102,7 @@ new #[Layout('layouts.driver')] class extends Component
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">In Transit</p>
-                    <p class="text-3xl font-black text-gray-900 mt-2">{{ $orders->where('status', 'assigned')->count() }}</p>
+                    <p class="text-3xl font-black text-gray-900 mt-2">{{ $orders->where('status', 'In Transit')->count() }}</p>
                 </div>
                 <div class="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform duration-300">
                     <i data-lucide="truck" class="w-7 h-7"></i>
@@ -154,8 +154,8 @@ new #[Layout('layouts.driver')] class extends Component
                             </td>
                             <td class="px-2 md:px-8 py-2 md:py-5 flex justify-between items-center md:table-cell border-b border-gray-100 md:border-none">
                                 <span class="md:hidden text-xs font-bold text-gray-400 uppercase tracking-widest">Bon</span>
-                                <a href="{{ route('driver.bons.show', $order->bon) }}" class="font-bold text-primary hover:text-primary/80 transition-colors">
-                                    #{{ $order->bon->code ?? 'N/A' }}
+                                <a href="{{ route('driver.bons.show', $order->bonDriver->code) }}" class="font-bold text-primary hover:text-primary/80 transition-colors">
+                                    #{{ $order->bonDriver->code ?? 'N/A' }}
                                 </a>
                             </td>
                             <td class="px-2 md:px-8 py-2 md:py-5 flex justify-between items-center md:table-cell border-b border-gray-100 md:border-none">

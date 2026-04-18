@@ -69,13 +69,6 @@ new #[Layout('layouts.driver')] class extends Component
         </span>
     </x-slot>
     <div class="max-w-7xl mx-auto space-y-6">
-        <div class="flex justify-end mb-6">
-            <a href="{{ route('driver.bons.create') }}" wire:navigate class="group flex justify-center items-center space-x-2 w-full md:w-auto px-6 py-4 md:py-3.5 bg-primary text-white rounded-2xl md:rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 border border-primary/50">
-                <i data-lucide="plus-circle" class="w-5 h-5"></i>
-                <span>Create New Bon</span>
-            </a>
-        </div>
-
         <!-- Stats Cards -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             <div class="bg-white p-5 md:p-8 rounded-3xl md:rounded-[2rem] shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer gap-3 md:gap-0" wire:click="filterByStatus('all')">
@@ -194,7 +187,7 @@ new #[Layout('layouts.driver')] class extends Component
                                         </div>
                                         <div class="ml-4">
                                             <div class="text-base font-black text-gray-900">#{{ $bon->code }}</div>
-                                            <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">{{ $bon->orders->count() }} Orders</div>
+                                            <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">{{ $bon->orders_driver->count() }} Orders</div>
                                         </div>
                                     </div>
                                 </td>
