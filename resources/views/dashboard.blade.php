@@ -20,7 +20,7 @@
     try {
         $mappedOrders = \App\Models\Order::whereNotNull('lat')->whereNotNull('lng')
             ->with('bon.user') 
-            ->get(['id', 'code', 'lat', 'lng', 'status', 'bon_id', 'location'])
+            ->get()
             ->map(fn($o) => [
                 'id'       => $o->id,
                 'lat'      => (float)($o->lat ?? 0),
