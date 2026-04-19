@@ -38,7 +38,7 @@ new #[Layout('layouts.admin')] class extends Component
     public function with()
     {
         return [
-            'clients' => Client::with('user')->get(),
+            'clients' => Client::with('user')->get(),   
             'drivers' => Driver::with('user')->get(),
             'vehicles' => Vehicle::all(),
             'bons' => Bon::where('status', 'pending')->get(),
@@ -47,7 +47,7 @@ new #[Layout('layouts.admin')] class extends Component
     public function generateQrCode()
 {
     if (!$this->code) {
-        return null;
+        $this->code = 'OR-'.rand(100000000,999999999);
     }
 
     $qrData = 'Bon: ' . $this->code;
@@ -119,11 +119,12 @@ new #[Layout('layouts.admin')] class extends Component
             ]);
 
             // 2. Prepare Order Data
-            $client = Client::find($this->client_id);
+            $bon = Bon::find($this->bon_id);
             $driver = $this->driver_id ? Driver::find($this->driver_id) : null;
             $vehicle = $this->vehicle_id ? Vehicle::find($this->vehicle_id) : null;
 
-            $finalCode = $this->code ?: 'DEL-' . strtoupper(bin2hex(random_bytes(3)));
+            // Use generated code if available, or generate a final fallback
+            $finalCode = $this->code ?: 'OR-' . rand(100000000, 999999999);
             $qrPath = $this->qr_file ? $this->qr_file->store('orders/qr', 'public') : null;
 
             Order::create([
@@ -137,7 +138,7 @@ new #[Layout('layouts.admin')] class extends Component
                 'lng' => $this->lng, 
                 'price' => $this->price,
                 'driver_commission' => $driver ? $driver->commission : 0,
-                'commission' => $client ? $client->commission : 0,
+                'commission' => $bon ? $bon->commission : 0,
                 'vehicle_license_plate' => $vehicle ? $vehicle->license_plate : null,
                 'status' => 'pending',
                 'bon_id' => $this->bon_id,
@@ -264,7 +265,7 @@ new #[Layout('layouts.admin')] class extends Component
                                 </h3>
                                 
                                 @php
-                                    $qrUrl = $this->generateQrCode($this->code);
+                                    $qrUrl = $this->generateQrCode();
                                 @endphp
 
                                 @if($qrUrl)

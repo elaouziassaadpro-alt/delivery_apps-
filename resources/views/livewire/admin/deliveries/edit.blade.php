@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Order;
-use App\Models\Recipient;
+use App\Models\Bon;
 use App\Models\Client;
 use App\Models\Driver;
 use App\Models\Vehicle;
@@ -18,6 +18,8 @@ new #[Layout('layouts.admin')] class extends Component
 
     public Order $order;
 
+    
+
     // Recipient fields
     public string $first_name = '';
     public string $last_name = '';
@@ -25,10 +27,10 @@ new #[Layout('layouts.admin')] class extends Component
     public string $email = '';
 
     // Order fields
-    public $client_id;
+    public $bon_id;
     public $driver_id;
     public $vehicle_id;
-    public string $code = '';
+    public string $code;
     public $qr_file;
     public $existing_qr; // To show current QR
     public string $location = '';
@@ -49,7 +51,7 @@ new #[Layout('layouts.admin')] class extends Component
         $this->email = $order->recipient->email ?? '';
 
         // Load Order Data
-        $this->client_id = $order->client_id;
+        $this->bon_id = $order->bon_id;
         $this->driver_id = $order->driver_id;
         $this->vehicle_id = $order->vehicle_id;
         $this->code = $order->code;
@@ -61,12 +63,25 @@ new #[Layout('layouts.admin')] class extends Component
         $this->lng = $order->lng;
     }
 
+    public function generateQrCode()
+    {
+        if (!$this->code) {
+            $this->code = 'OR-'.rand(100000000,999999999);
+        }
+
+        $qrData = 'Bon: ' . $this->code;
+        $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($qrData);
+
+        return $qrUrl;
+    }
+
     public function with()
     {
         return [
             'clients' => Client::with('user')->get(),
             'drivers' => Driver::with('user')->get(),
             'vehicles' => Vehicle::all(),
+            'bons' => Bon::where('status', 'pending')->orWhere('id', $this->bon_id)->get(),
         ];
     }
 
@@ -104,10 +119,10 @@ new #[Layout('layouts.admin')] class extends Component
             'last_name' => 'required|string|max:255',
             'phone' => 'required|string|max:25',
             'email' => 'nullable|email|max:255',
-            'client_id' => 'required|exists:clients,id',
+            'bon_id' => 'nullable|exists:bons,id',
             'driver_id' => 'nullable|exists:drivers,id',
             'vehicle_id' => 'nullable|exists:vehicles,id',
-            'code' => 'required|string|max:255|unique:orders,code,' . $this->order->id,
+            'code' => 'nullable|string|max:255|unique:orders,code,' . $this->order->id,
             'qr_file' => 'nullable|image|max:1024',
             'location' => 'required|string',
             'price' => 'required|numeric|min:0',
@@ -133,15 +148,15 @@ new #[Layout('layouts.admin')] class extends Component
             }
 
             // 3. Update Order
-            $client = Client::find($this->client_id);
+            $bon = Bon::find($this->bon_id);
             $driver = $this->driver_id ? Driver::find($this->driver_id) : null;
             $vehicle = $this->vehicle_id ? Vehicle::find($this->vehicle_id) : null;
 
             $this->order->update([
-                'client_id' => $this->client_id,
+                'bon_id' => $this->bon_id,
                 'driver_id' => $this->driver_id,
                 'vehicle_id' => $this->vehicle_id,
-                'code' => $this->code,
+                'code' => $this->code ?: 'OR-' . rand(100000000, 999999999),
                 'qr_file' => $qrPath,
                 'location' => $this->location,
                 'lat' => $this->lat,
@@ -149,7 +164,7 @@ new #[Layout('layouts.admin')] class extends Component
                 'price' => $this->price,
                 'status' => $this->status,
                 'driver_commission' => $driver ? $driver->commission : 0,
-                'commission' => $client ? $client->commission : 0,
+                'commission' => $bon ? $bon->commission : 0,
                 'vehicle_license_plate' => $vehicle ? $vehicle->license_plate : null,
             ]);
         });
@@ -211,13 +226,14 @@ new #[Layout('layouts.admin')] class extends Component
                     </div>
 
                     <div class="space-y-1">
-                        <label class="text-[10px] uppercase tracking-widest font-black text-gray-400">Status</label>
-                        <select wire:model="status" class="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm">
-                            <option value="pending">Pending</option>
-                            <option value="in transit">In Transit</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
+                        <label class="text-[10px] uppercase tracking-widest font-black text-gray-400">Assign Bon</label>
+                        <select wire:model="bon_id" class="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm">
+                            <option value="">Select a Bon</option>
+                            @foreach($bons as $b)
+                                <option value="{{ $b->id }}">{{ $b->code }}</option>
+                            @endforeach
                         </select>
+                        <x-input-error :messages="$errors->get('bon_id')" />
                     </div>
 
                     <div class="space-y-1">
@@ -230,17 +246,37 @@ new #[Layout('layouts.admin')] class extends Component
                         </select>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="space-y-1">
-                            <label class="text-[10px] uppercase tracking-widest font-black text-gray-400">Update QR</label>
-                            <input wire:model="qr_file" type="file" class="block w-full text-xs text-gray-500">
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase tracking-widest font-black text-gray-400">Select Vehicle</label>
+                        <select wire:model="vehicle_id" class="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm">
+                            <option value="">No Vehicle Assigned</option>
+                            @foreach($vehicles as $v)
+                                <option value="{{ $v->id }}">{{ $v->make }} ({{ $v->license_plate }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="pt-4 space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6"> 
+                            <div class="space-y-2 col-span-3">
+                                <label class="text-xs uppercase tracking-widest font-bold text-gray-400">Delivery Code</label>
+                                <input wire:model="code" type="text" class="block w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium" >
+                                <x-input-error :messages="$errors->get('code')" />
+                            </div>
+                            <div class="space-y-1 col-span-1 mt-8">
+                                <button type="button" wire:click="generateQrCode" class="block w-full px-4 py-3 bg-primary border border-primary rounded-xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium text-white">Generate</button>
+                            </div>
                         </div>
-                        <div class="flex items-center justify-center bg-gray-50 rounded-2xl border border-gray-100 p-2">
-                             @if($existing_qr)
-                                <img src="{{ asset('storage/'.$existing_qr) }}" class="h-12 w-12 object-contain">
-                             @else
-                                <span class="text-[8px] text-gray-400">No QR</span>
-                             @endif
+                        
+                        <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 flex flex-col items-center">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">QR Code Preview</h3>
+                            @php
+                                $qrUrl = $this->generateQrCode();
+                            @endphp
+
+                            @if($qrUrl)
+                                <img src="{{ $qrUrl }}" alt="QR Code" class="w-32 h-32 rounded-xl shadow-sm border border-white">
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -258,6 +294,15 @@ new #[Layout('layouts.admin')] class extends Component
                         </div>
 
                         <div class="space-y-6">
+                            <div class="space-y-1">
+                                <label class="text-[10px] uppercase tracking-widest font-black text-gray-400">Status</label>
+                                <select wire:model="status" class="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm">
+                                    <option value="pending">Pending</option>
+                                    <option value="in transit">In Transit</option>
+                                    <option value="delivered">Delivered</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
                             <div class="space-y-1">
                                 <label class="text-sm font-black text-gray-700 uppercase tracking-widest">Price ($)</label>
                                 <input wire:model="price" type="number" step="0.01" class="block w-full py-4 bg-gray-50 border border-gray-100 rounded-2xl text-center text-lg font-black text-primary">

@@ -45,13 +45,13 @@ new #[Layout('layouts.admin')] class extends Component
     {
         $this->validate([
             'user_id' => 'required|exists:users,id',
-            'code' => 'required|unique:bons,code',
+            'code' => 'nullable|unique:bons,code',
             'price' => 'required|numeric|min:0',
             'pickup_date' => 'nullable|date',
         ]);
 
         Bon::create([
-            'code' => $this->code,
+            'code' => $this->code ?: 'BON-'.rand(100000000,999999999),
             'user_id' => $this->user_id,
             'status' => $this->status,
             'payment_status' => $this->payment_status,
