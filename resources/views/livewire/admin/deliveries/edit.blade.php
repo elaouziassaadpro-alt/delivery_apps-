@@ -133,52 +133,60 @@ new #[Layout('layouts.admin')] class extends Component
             'status' => 'required|string',
         ]);
 
-        DB::transaction(function () {
-            // 1. Update Recipient
-            $this->order->recipient->update([
-                'first_name' => $this->first_name,
-                'last_name' => $this->last_name,
-                'phone' => $this->phone,
-                'email' => $this->email,
-            ]);
-
-            // 2. Handle QR Code Update
-            $qrPath = $this->order->qr_file;
-            if ($this->qr_file) {
-                if ($this->order->qr_file) {
-                    Storage::disk('public')->delete($this->order->qr_file);
+        try {
+            DB::transaction(function () {
+                // 1. Update Recipient
+                if ($this->order->recipient) {
+                    $this->order->recipient->update([
+                        'first_name' => $this->first_name,
+                        'last_name' => $this->last_name,
+                        'phone' => $this->phone,
+                        'email' => $this->email,
+                    ]);
                 }
-                $qrPath = $this->qr_file->store('orders/qr', 'public');
-            }
 
-            // 3. Update Order
-            $bonId = $this->bon_id ?: null;
-            $driverId = $this->driver_id ?: null;
-            $vehicleId = $this->vehicle_id ?: null;
+                // 2. Handle QR Code Update
+                $qrPath = $this->order->qr_file;
+                if ($this->qr_file) {
+                    if ($this->order->qr_file) {
+                        Storage::disk('public')->delete($this->order->qr_file);
+                    }
+                    $qrPath = $this->qr_file->store('orders/qr', 'public');
+                }
 
-            $bon = $bonId ? Bon::find($bonId) : null;
-            $driver = $driverId ? Driver::find($driverId) : null;
-            $vehicle = $vehicleId ? Vehicle::find($vehicleId) : null;
+                // 3. Update Order
+                $bonId = $this->bon_id ?: null;
+                $driverId = $this->driver_id ?: null;
+                $vehicleId = $this->vehicle_id ?: null;
 
-            $this->order->update([
-                'bon_id' => $bonId,
-                'driver_id' => $driverId,
-                'vehicle_id' => $vehicleId,
-                'code' => $this->code ?: 'OR-' . rand(100000000, 999999999),
-                'qr_file' => $qrPath,
-                'location' => $this->location,
-                'lat' => $this->lat,
-                'lng' => $this->lng,
-                'price' => $this->price,
-                'status' => $this->status,
-                'driver_commission' => $driver ? $driver->commission : 0,
-                'commission' => $bon ? $bon->commission : 0,
-                'vehicle_license_plate' => $vehicle ? $vehicle->license_plate : null,
-            ]);
-        });
+                $bon = $bonId ? Bon::find($bonId) : null;
+                $driver = $driverId ? Driver::find($driverId) : null;
+                $vehicle = $vehicleId ? Vehicle::find($vehicleId) : null;
 
-        session()->flash('status', 'Delivery updated successfully.');
-        return $this->redirect(route('admin.deliveries.index'), navigate: true);
+                $this->order->update([
+                    'bon_id' => $bonId,
+                    'driver_id' => $driverId,
+                    'vehicle_id' => $vehicleId,
+                    'code' => $this->code ?: 'OR-' . rand(100000000, 999999999),
+                    'qr_file' => $qrPath,
+                    'location' => $this->location,
+                    'lat' => $this->lat,
+                    'lng' => $this->lng,
+                    'price' => $this->price,
+                    'status' => $this->status,
+                    'driver_commission' => $driver ? ($driver->commission ?? 0) : 0,
+                    'commission' => $bon ? ($bon->commission ?? 0) : 0,
+                    'vehicle_license_plate' => $vehicle ? $vehicle->license_plate : null,
+                ]);
+            });
+
+            session()->flash('status', 'Delivery updated successfully.');
+            return $this->redirect(route('admin.deliveries.index'), navigate: true);
+
+        } catch (\Exception $e) {
+            logger('Delivery Update Error: ' . $e->getMessage());
+            $this->addError('update_error', 'Failed to update delivery: ' . $e->getMessage());
+        }
     }
 }; ?>
 
@@ -194,6 +202,8 @@ new #[Layout('layouts.admin')] class extends Component
     </x-slot>
 
     <div class="max-w-5xl mx-auto">
+        <x-input-error :messages="$errors->get('update_error')" class="mb-6 bg-red-50 p-4 rounded-2xl border border-red-100" />
+
         <form wire:submit="updateDelivery" class="space-y-8">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
