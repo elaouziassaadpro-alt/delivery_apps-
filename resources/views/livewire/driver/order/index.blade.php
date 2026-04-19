@@ -9,7 +9,7 @@ new #[Layout('layouts.driver')] class extends Component
 {
     use Livewire\WithPagination;
 
-    public string $status = 'pending';
+    public string $status = 'In Transit';
     public string $scanCode = '';
     public ?string $scanError = null;
 
