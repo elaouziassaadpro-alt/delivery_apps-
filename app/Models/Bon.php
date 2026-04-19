@@ -48,7 +48,7 @@ class Bon extends Model
     }
     public function status_completed()
     {
-        if($this->orders()->where('status', '!='>'delivered')->count() == 0){
+        if($this->orders()->where('status', '!=', 'delivered')->count() == 0){
             $this->is_completed = 1;
             $this->save();
             return true;

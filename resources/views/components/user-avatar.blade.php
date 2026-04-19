@@ -11,13 +11,13 @@
 
 <div {{ $attributes->merge(['class' => 'overflow-hidden']) }}>
 
-    @if ($user->photo instanceof \Livewire\TemporaryUploadedFile)
+    @if (($user?->photo ?? null) instanceof \Livewire\TemporaryUploadedFile)
         <img 
             src="{{ $user->photo->temporaryUrl() }}" 
             class="w-full h-full object-cover" 
             alt="Preview"
         >
-    @elseif (!empty($user->photo) && Storage::disk('private')->exists($user->photo))
+    @elseif (!empty($user?->photo) && Storage::disk('private')->exists($user->photo))
         <img 
             src="{{  route('profile.photo', ['filename' => basename($user->photo)]) }}" 
             class="w-full h-full object-cover" 

@@ -69,7 +69,7 @@ new #[Layout('layouts.admin')] class extends Component
     {
         return [
             'bons' => Bon::query()
-                ->with(['user', 'orders'])
+                ->with(['user', 'orders_driver'])
                 ->whereHas('user', function ($q) {
                     $q->where('role', $this->role);
                 })
@@ -169,7 +169,7 @@ new #[Layout('layouts.admin')] class extends Component
                             };
                         @endphp
                         
-                        <tr class="hover:bg-gray-50/30 transition-colors group" wire:key="client-{{ $bon->id }}">
+                        <tr class="hover:bg-gray-50/30 transition-colors group" wire:key="driver-{{ $bon->id }}">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">
                                     
