@@ -54,7 +54,7 @@ new #[Layout('layouts.admin')] class extends Component
         $this->bon_id = $order->bon_id;
         $this->driver_id = $order->driver_id;
         $this->vehicle_id = $order->vehicle_id;
-        $this->code = $order->code;
+        $this->code = $order->code ?: 'OR-' . rand(100000000, 999999999);
         $this->existing_qr = $order->qr_file;
         $this->location = $order->location;
         $this->price = $order->price;
@@ -65,11 +65,7 @@ new #[Layout('layouts.admin')] class extends Component
 
     public function generateQrCode()
     {
-        if (!$this->code) {
-            $this->code = 'OR-'.rand(100000000,999999999);
-        }
-
-        $qrData = 'Bon: ' . $this->code;
+        $qrData = 'Bon: ' . ($this->code ?: 'N/A');
         $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($qrData);
 
         return $qrUrl;
@@ -78,10 +74,18 @@ new #[Layout('layouts.admin')] class extends Component
     public function with()
     {
         return [
-            'clients' => Client::with('user')->get(),
             'drivers' => Driver::with('user')->get(),
             'vehicles' => Vehicle::all(),
-            'bons' => Bon::where('status', 'pending')->orWhere('id', $this->bon_id)->get(),
+            'bons' => Bon::query()
+                ->with('user')
+                ->where(function($query) {
+                    $query->where('status', 'pending')
+                          ->orWhere('id', $this->bon_id);
+                })
+                ->whereHas('user', function($query) {
+                    $query->where('role', 'client');
+                })
+                ->get(),
         ];
     }
 
@@ -148,14 +152,18 @@ new #[Layout('layouts.admin')] class extends Component
             }
 
             // 3. Update Order
-            $bon = Bon::find($this->bon_id);
-            $driver = $this->driver_id ? Driver::find($this->driver_id) : null;
-            $vehicle = $this->vehicle_id ? Vehicle::find($this->vehicle_id) : null;
+            $bonId = $this->bon_id ?: null;
+            $driverId = $this->driver_id ?: null;
+            $vehicleId = $this->vehicle_id ?: null;
+
+            $bon = $bonId ? Bon::find($bonId) : null;
+            $driver = $driverId ? Driver::find($driverId) : null;
+            $vehicle = $vehicleId ? Vehicle::find($vehicleId) : null;
 
             $this->order->update([
-                'bon_id' => $this->bon_id,
-                'driver_id' => $this->driver_id,
-                'vehicle_id' => $this->vehicle_id,
+                'bon_id' => $bonId,
+                'driver_id' => $driverId,
+                'vehicle_id' => $vehicleId,
                 'code' => $this->code ?: 'OR-' . rand(100000000, 999999999),
                 'qr_file' => $qrPath,
                 'location' => $this->location,
