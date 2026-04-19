@@ -93,21 +93,21 @@
 
                 <div x-show="!sidebarCollapsed" class="px-4 pt-6 pb-2 uppercase text-[10px] font-black tracking-[0.2em] text-gray-500/80">Active Flow</div>
                 
-                <a href="{{ route('admin.bons.index') }}" 
+                <a href="{{ route('admin.bons.client.index') }}" 
                 wire:navigate
-                class="flex items-center space-x-3 px-4 py-3 rounded-2xl group {{ request()->routeIs('admin.bons.index') ? 'bg-primary/10 text-primary shadow-[inset_4px_0_0_0_rgba(var(--primary-rgb),1)]' : 'hover:bg-white/5 hover:text-white' }} transition-all duration-200">
-                    <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 {{ request()->routeIs('admin.bons.index') ? 'drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]' : '' }}">
+                class="flex items-center space-x-3 px-4 py-3 rounded-2xl group {{ request()->routeIs('admin.bons.client.*') ? 'bg-primary/10 text-primary shadow-[inset_4px_0_0_0_rgba(var(--primary-rgb),1)]' : 'hover:bg-white/5 hover:text-white' }} transition-all duration-200">
+                    <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 {{ request()->routeIs('admin.bons.client.*') ? 'drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]' : '' }}">
                         <i data-lucide="list" class="w-full h-full"></i>
                     </div>
-                    <span x-show="!sidebarCollapsed" class="font-bold text-sm whitespace-nowrap {{ request()->routeIs('admin.bons.index') ? 'text-white' : '' }}">Bons Clients</span>
+                    <span x-show="!sidebarCollapsed" class="font-bold text-sm whitespace-nowrap {{ request()->routeIs('admin.bons.client.*') ? 'text-white' : '' }}">Bons Clients</span>
                 </a>
-                <a href="{{ route('admin.bons.index-driver') }}" 
+                <a href="{{ route('admin.bons.driver.index') }}" 
                 wire:navigate
-                class="flex items-center space-x-3 px-4 py-3 rounded-2xl group {{ request()->routeIs('admin.bons.index-driver') ? 'bg-primary/10 text-primary shadow-[inset_4px_0_0_0_rgba(var(--primary-rgb),1)]' : 'hover:bg-white/5 hover:text-white' }} transition-all duration-200">
-                    <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 {{ request()->routeIs('admin.bons.index-driver') ? 'drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]' : '' }}">
+                class="flex items-center space-x-3 px-4 py-3 rounded-2xl group {{ request()->routeIs('admin.bons.driver.*') ? 'bg-primary/10 text-primary shadow-[inset_4px_0_0_0_rgba(var(--primary-rgb),1)]' : 'hover:bg-white/5 hover:text-white' }} transition-all duration-200">
+                    <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 {{ request()->routeIs('admin.bons.driver.*') ? 'drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]' : '' }}">
                         <i data-lucide="user-check" class="w-full h-full"></i>
                     </div>
-                    <span x-show="!sidebarCollapsed" class="font-bold text-sm whitespace-nowrap {{ request()->routeIs('admin.bons.index-driver') ? 'text-white' : '' }}">Bons Drivers</span>
+                    <span x-show="!sidebarCollapsed" class="font-bold text-sm whitespace-nowrap {{ request()->routeIs('admin.bons.driver.*') ? 'text-white' : '' }}">Bons Drivers</span>
                 </a>
 
                 <a href="{{ route('admin.deliveries.index') }}" 

@@ -22,7 +22,7 @@ new #[Layout('layouts.admin')] class extends Component {
         <span class="flex items-center">
             <a href="{{ route('admin.dashboard') }}" class="hover:text-primary transition-colors text-gray-400">{{ __('Dashboard') }}</a>
             <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-gray-300"></i>
-            <a href="{{ route('admin.bons.index') }}" class="hover:text-primary transition-colors text-gray-400">{{ __('Bons') }}</a>
+            <a href="{{ route('admin.bons.client.index') }}" class="hover:text-primary transition-colors text-gray-400">{{ __('Bons') }}</a>
             <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-gray-300"></i>
             <span class="text-text-main font-medium">{{ __('View') }} #{{ $bon->code }}</span>
         </span>
@@ -44,7 +44,7 @@ new #[Layout('layouts.admin')] class extends Component {
         </div>
 
         <div class="mt-8">
-            <a href="{{ route('admin.bons.index') }}" class="px-6 py-3 text-sm bg-gray-50 text-gray-700 rounded-xl font-bold hover:bg-gray-100 transition-all inline-block">
+            <a href="{{ route('admin.bons.client.index') }}" class="px-6 py-3 text-sm bg-gray-50 text-gray-700 rounded-xl font-bold hover:bg-gray-100 transition-all inline-block">
                 {{ __('Back to List') }}
             </a>
         </div>

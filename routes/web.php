@@ -67,16 +67,17 @@ Route::middleware(['auth'])->group(function () {
             Volt::route('/vehicules', 'admin.vehicules.index')->name('vehicules.index');
             Volt::route('/vehicules/{vehicle}/edit', 'admin.vehicules.edit')->name('vehicules.edit');
 
-            Volt::route('/bons/create', 'admin.bons.create')->name('bons.create');
-            Volt::route('/bons', 'admin.bons.index')->name('bons.index');
-            Volt::route('/bons/{bon}', 'admin.bons.show')->name('bons.show');
-            Volt::route('/bons/{bon}/edit', 'admin.bons.edit')->name('bons.edit');
-            Volt::route('/bons/{bon}/delete', 'admin.bons.delete')->name('bons.delete');
+            Volt::route('/bons/create', 'admin.bons.clients.create')->name('bons.client.create');
+            Volt::route('/bons', 'admin.bons.clients.index')->name('bons.client.index');
+            Volt::route('/bons/{bon}', 'admin.bons.clients.show')->name('bons.client.show');
+            Volt::route('/bons/{bon}/edit', 'admin.bons.clients.edit')->name('bons.client.edit');
+            Volt::route('/bons/{bon}/delete', 'admin.bons.clients.delete')->name('bons.client.delete');
 
-            Volt::route('/bons-driver', 'admin.bons.index-driver')->name('bons.index-driver');
-            Volt::route('/bons-driver/{bon}', 'admin.bons.show-driver')->name('bons.show-driver');
-            Volt::route('/bons-driver/{bon}/edit', 'admin.bons.edit-driver')->name('bons.edit-driver');
-            Volt::route('/bons-driver/{bon}/delete', 'admin.bons.delete-driver')->name('bons.delete-driver');
+            Volt::route('/bons-driver/create', 'admin.bons.drivers.create')->name('bons.driver.create');
+            Volt::route('/bons-driver', 'admin.bons.drivers.index')->name('bons.driver.index');
+            Volt::route('/bons-driver/{bon}', 'admin.bons.drivers.show')->name('bons.driver.show');
+            Volt::route('/bons-driver/{bon}/edit', 'admin.bons.drivers.edit')->name('bons.driver.edit');
+            Volt::route('/bons-driver/{bon}/delete', 'admin.bons.drivers.delete')->name('bons.driver.delete');
         });
 
     /*

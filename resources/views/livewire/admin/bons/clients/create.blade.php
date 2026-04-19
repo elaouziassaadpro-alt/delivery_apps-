@@ -24,31 +24,17 @@ new #[Layout('layouts.admin')] class extends Component
     public $price;
     public $notes;
     public $code;
-    public $role = 'client';
     public $users = [];
 
     public function mount()
     {
-        $this->loadUsers();
-
-    }
-
-    // Automatically called by Livewire when $role changes
-    public function updatedRole()
-    {
-        $this->loadUsers();
-        $this->user_id = null; // reset user selection
-    }
-
-    private function loadUsers()
-    {
-        $this->users = User::where('role', $this->role)->get();
+        $this->users = User::where('role', 'client')->get();
     }
 
     public function generateQrCode()
     {
         if (!$this->code) {
-            $this->addError('code', 'Code is empty.');
+            $this->code = 'BON-'.rand(100000000,999999999);
             return null;
         }
 
@@ -77,7 +63,7 @@ new #[Layout('layouts.admin')] class extends Component
         ]);
 
         session()->flash('success', 'Bon created successfully.');
-        return redirect()->route('admin.bons.index');
+        return redirect()->route('admin.bons.client.index');
     }
 
     
@@ -93,7 +79,7 @@ new #[Layout('layouts.admin')] class extends Component
         <span class="flex items-center">
             <a href="{{ route('admin.dashboard') }}" class="hover:text-primary transition-colors text-gray-400">{{ __('Dashboard') }}</a>
             <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-gray-300"></i>
-            <a href="{{ route('admin.bons.index') }}" class="hover:text-primary transition-colors">{{ __('Bons') }}</a>
+            <a href="{{ route('admin.bons.client.index') }}" class="hover:text-primary transition-colors">{{ __('Bons') }}</a>
             <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-gray-300"></i>
             <span class="text-text-main font-medium">{{ __('Create') }}</span>
         </span>
@@ -134,25 +120,9 @@ new #[Layout('layouts.admin')] class extends Component
                             <!-- Client / Driver selection -->
                             <div class="space-y-1 grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-1">
-                                    <label class="text-xs uppercase tracking-widest font-bold text-gray-400">user type</label>
-                                    <select wire:model.live="role" 
-                                            class="block w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl 
-                                                focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium">
-                                        <option value="">{{ __('Select type') }}</option>
-                                        <option value="client">{{ __('Client') }}</option>
-                                        <option value="driver">{{ __('Driver') }}</option>
-                                    </select>
-                                    <x-input-error :messages="$errors->get('role')" />
-                                </div>
-
-                                <div class="space-y-1">
                                     <label class="text-xs uppercase tracking-widest font-bold text-gray-400">User</label>
                                     <select wire:model="user_id" class="block w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium">
-                                        @if($this->role == 'client')
-                                            <option value="">{{ __('Select client') }}</option>
-                                        @else
-                                            <option value="">{{ __('Select driver') }}</option>
-                                        @endif
+                                        <option value="">{{ __('Select client') }}</option>
                                         @foreach($users as $user)
                                             <option value="{{ $user->id }}">{{ $user->name }}</option>
                                         @endforeach
@@ -261,7 +231,7 @@ new #[Layout('layouts.admin')] class extends Component
                     <!-- Actions -->
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
                         <div class="flex justify-end gap-3">
-                            <a href="{{ route('admin.bons.index') }}" class="px-6 py-3 text-sm bg-gray-50 text-gray-700 rounded-xl font-bold hover:bg-gray-100 transition-all">
+                            <a href="{{ route('admin.bons.client.index') }}" class="px-6 py-3 text-sm bg-gray-50 text-gray-700 rounded-xl font-bold hover:bg-gray-100 transition-all">
                                 {{ __('Cancel') }}
                             </a>
                             <button type="submit" class="px-6 py-3 text-sm bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center">

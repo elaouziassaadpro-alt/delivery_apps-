@@ -26,7 +26,6 @@ new #[Layout('layouts.admin')] class extends Component {
         $this->payment_status = $bon->payment_status;
         $this->payment_method = $bon->payment_method;
         $this->delivery_type = $bon->delivery_type;
-        // Since sqlite/mysql might return standard datetime, format for 'date' input
         $this->pickup_date = $bon->pickup_date ? \Carbon\Carbon::parse($bon->pickup_date)->format('Y-m-d') : null;
         $this->price = $bon->price;
         $this->notes = $bon->notes;
@@ -66,13 +65,13 @@ new #[Layout('layouts.admin')] class extends Component {
 
         session()->flash('status', 'Bon updated successfully.');
 
-        return redirect()->route('admin.bons.index');
+        return redirect()->route('admin.bons.driver.index');
     }
 
     public function with(): array
     {
         return [
-            'users' => User::where('role', 'client')->get(),
+            'users' => User::where('role', 'driver')->get(),
         ];
     }
 }; ?>
@@ -86,7 +85,7 @@ new #[Layout('layouts.admin')] class extends Component {
         <span class="flex items-center">
             <a href="{{ route('admin.dashboard') }}" class="hover:text-primary transition-colors text-gray-400">{{ __('Dashboard') }}</a>
             <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-gray-300"></i>
-            <a href="{{ route('admin.bons.index') }}" class="hover:text-primary transition-colors text-gray-400">{{ __('Bons') }}</a>
+            <a href="{{ route('admin.bons.driver.index') }}" class="hover:text-primary transition-colors text-gray-400">{{ __('Bons') }}</a>
             <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-gray-300"></i>
             <span class="text-text-main font-medium">{{ __('Edit') }} #{{ $bon->code }}</span>
         </span>
@@ -94,13 +93,6 @@ new #[Layout('layouts.admin')] class extends Component {
 
     <div class="max-w-6xl mx-auto">
         <form wire:submit="save" class="space-y-6">
-            @if (session('success'))
-                <div class="p-4 bg-success/10 border border-success/20 rounded-2xl text-success flex items-center shadow-lg shadow-success/5 animate-in fade-in slide-in-from-top-4">
-                    <i data-lucide="check-circle" class="w-6 h-6 me-4"></i>
-                    <span class="text-base font-bold">{{ session('success') }}</span>
-                </div>
-            @endif
-
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Bon Details -->
                 <div class="space-y-6">
@@ -123,11 +115,11 @@ new #[Layout('layouts.admin')] class extends Component {
                                 </div>
                             </div>
 
-                            <!-- Client -->
+                            <!-- Driver -->
                             <div class="space-y-1">
-                                <label class="text-xs uppercase tracking-widest font-bold text-gray-400">Client</label>
+                                <label class="text-xs uppercase tracking-widest font-bold text-gray-400">Driver</label>
                                 <select wire:model="user_id" class="block w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium">
-                                    <option value="">{{ __('Select client') }}</option>
+                                    <option value="">{{ __('Select driver') }}</option>
                                     @foreach($users as $user)
                                         <option value="{{ $user->id }}">{{ $user->name }}</option>
                                     @endforeach
@@ -235,7 +227,7 @@ new #[Layout('layouts.admin')] class extends Component {
                     <!-- Actions -->
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
                         <div class="flex justify-end gap-3">
-                            <a href="{{ route('admin.bons.index') }}" class="px-6 py-3 text-sm bg-gray-50 text-gray-700 rounded-xl font-bold hover:bg-gray-100 transition-all">
+                            <a href="{{ route('admin.bons.driver.index') }}" class="px-6 py-3 text-sm bg-gray-50 text-gray-700 rounded-xl font-bold hover:bg-gray-100 transition-all">
                                 {{ __('Cancel') }}
                             </a>
                             <button type="submit" class="px-6 py-3 text-sm bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center">

@@ -12,11 +12,11 @@ new #[Layout('layouts.admin')] class extends Component
 
     #[Url(history: true)]
     public $search = '';
-    public $is_completed = '';
     public $showBonDetails = false;
     public $bon = null;
-    public $showBonClient = true;
-    public $role = 'client';
+    public $is_completed = '';
+    public $showBonDriver = true;
+    public $role = 'driver';
 
     
     public function updatingSearch() { $this->resetPage(); }
@@ -24,10 +24,8 @@ new #[Layout('layouts.admin')] class extends Component
 
     public function showBon($id)
     {
-        $bon = Bon::with(['user', 'orders.recipient', 'orders_driver.recipient'])->findOrFail($id);
-        $this->bon = $bon;
+        $this->bon = Bon::with(['user', 'orders.recipient', 'orders_driver.recipient'])->findOrFail($id);
         $this->showBonDetails = true;
-        // Keep current tab mode (client or driver) — do NOT reset here
     }
     public function generateQrCode()
     {
@@ -44,8 +42,9 @@ new #[Layout('layouts.admin')] class extends Component
     {
         $this->showBonDetails = false;
         $this->bon = null;
-        $this->showBonClient = true;
+        $this->showBonDriver = true;
     }
+    
 
     
 
@@ -53,7 +52,7 @@ new #[Layout('layouts.admin')] class extends Component
 
     public function editBon($id)
     {
-        return redirect()->route('admin.bons.edit', $id);
+        return redirect()->route('admin.bons.driver.edit', $id);
     }
 
     public function deleteBon($id)
@@ -68,7 +67,7 @@ new #[Layout('layouts.admin')] class extends Component
     {
         return [
             'bons' => Bon::query()
-                ->with(['user', 'orders'])
+                ->with(['user', 'orders_driver'])
                 ->whereHas('user', function ($q) {
                     $q->where('role', $this->role);
                 })
@@ -102,23 +101,21 @@ new #[Layout('layouts.admin')] class extends Component
     </x-slot>
 
     <x-slot name="actions">
-        <a href="{{ route('admin.bons.create') }}" class="px-5 py-2.5 bg-primary text-white rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center">
+        <a href="{{ route('admin.bons.driver.create') }}" class="px-5 py-2.5 bg-primary text-white rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center">
             <i data-lucide="plus-circle" class="w-4 h-4 me-2"></i>
             {{ __('Create Bon') }}
         </a>
     </x-slot>
 
     <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
-        <div class="p-8 border-b border-gray-50 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div class="flex flex-col md:flex-row items-center gap-4 flex-1">
-                <div class="relative w-full md:w-96">
-                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <i data-lucide="search" class="text-gray-400 w-5 h-5"></i>
-                    </span>
-                    <input wire:model.live.debounce.300ms="search" type="text" class="block w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium" placeholder="{{ __('Search bons') }}...">
-                </div>
-
-                <div class="relative w-full md:w-48">
+        <div class="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="relative w-full md:w-96">
+                <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i data-lucide="search" class="text-gray-400 w-5 h-5"></i>
+                </span>
+                <input wire:model.live.debounce.300ms="search" type="text" class="block w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all text-sm font-medium" placeholder="{{ __('Search bons') }}...">
+            </div>
+            <div class="relative w-full md:w-48">
                     <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <i data-lucide="filter" class="text-gray-400 w-4 h-4"></i>
                     </span>
@@ -131,7 +128,6 @@ new #[Layout('layouts.admin')] class extends Component
                         <i data-lucide="chevron-down" class="text-gray-400 w-4 h-4"></i>
                     </div>
                 </div>
-            </div>
 
             <div class="flex items-center space-x-4">
                 <div class="flex items-center space-x-2 text-sm text-gray-500 font-medium border-l pl-4 border-gray-100">
@@ -171,7 +167,7 @@ new #[Layout('layouts.admin')] class extends Component
                             };
                         @endphp
                         
-                        <tr class="hover:bg-gray-50/30 transition-colors group" wire:key="client-{{ $bon->id }}">
+                        <tr class="hover:bg-gray-50/30 transition-colors group" wire:key="driver-{{ $bon->id }}">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">
                                     
@@ -186,7 +182,7 @@ new #[Layout('layouts.admin')] class extends Component
                                     <!-- User Info -->
                                     <div class="leading-tight">
                                         <p class="font-semibold text-gray-900">
-                                            {{ $bon->user->name ?? 'Unknown User' }}
+                                            {{ $bon->user?->name ?? 'Unknown User' }}
                                         </p>
 
                                         <p class="text-xs text-gray-400">
@@ -204,17 +200,17 @@ new #[Layout('layouts.admin')] class extends Component
                                 <span class="text-sm font-bold text-gray-600">{{ $bon->created_at->format('d M Y') }}</span>
                             </td>
                             <td class="px-8 py-5">
-                                <p class="text-sm font-bold text-gray-900">{{ $bon->user->name ?? 'N/A' }}</p>
-                                <p class="text-xs text-gray-400">{{ $bon->user->email ?? '' }}</p>
+                                <p class="text-sm font-bold text-gray-900">{{ $bon->user?->name ?? 'N/A' }}</p>
+                                <p class="text-xs text-gray-400">{{ $bon->user?->email ?? '' }}</p>
                             </td>
                             <td class="px-8 py-5">
                                 <span class="inline-flex items-center space-x-1 text-sm text-gray-500">
-                                    <span class="font-black text-gray-900">{{ $bon->orders->count() }}</span>
+                                    <span class="font-black text-gray-900">{{ $bon->orders_driver->count() }}</span>
                                     <span>orders</span>
                                 </span>
                             </td>
                             <td class="px-8 py-5 text-sm font-black text-gray-900">
-                                {{ number_format($bon->orders->sum('price') ?? 0, 2) }} DH
+                                {{ number_format($bon->orders_driver->sum('price') ?? 0, 2) }} DH
                             </td>
                             <td class="px-8 py-5">
                                 <span class="px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest outline outline-2 outline-offset-1 {{ $status_color }}">
@@ -303,7 +299,7 @@ new #[Layout('layouts.admin')] class extends Component
                 {{-- ============================================================
                      CLIENT BON VIEW
                      ============================================================ --}}
-                @if($showBonClient)
+                @if($showBonDriver)
                 <div class="p-10 space-y-8">
                     
                     {{-- Top: QR + Key Stats --}}
@@ -315,7 +311,7 @@ new #[Layout('layouts.admin')] class extends Component
                         <div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
                             <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100">
                                 <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">{{ __('Client') }}</label>
-                                <p class="font-bold text-gray-900 truncate">{{ $bon->user->name ?? 'N/A' }}</p>
+                                <p class="font-bold text-gray-900 truncate">{{ $bon->user?->name ?? 'N/A' }}</p>
                             </div>
                             <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100">
                                 <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">{{ __('Total Amount') }}</label>
@@ -340,10 +336,10 @@ new #[Layout('layouts.admin')] class extends Component
                     <div>
                         <h3 class="text-base font-black text-gray-900 mb-4 flex items-center space-x-2">
                             <i data-lucide="package" class="w-4 h-4 text-primary"></i>
-                            <span>{{ __('Orders') }} ({{ $bon->orders->count() }})</span>
+                            <span>{{ __('Orders') }} ({{ $bon->orders_driver->count() }})</span>
                         </h3>
                         <div class="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100">
-                            @if($bon->orders->isNotEmpty())
+                            @if($bon->orders_driver->isNotEmpty())
                                 <table class="w-full text-left text-sm">
                                     <thead class="bg-gray-100/50">
                                         <tr>
@@ -355,7 +351,7 @@ new #[Layout('layouts.admin')] class extends Component
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-100">
-                                        @foreach($bon->orders as $order)
+                                        @foreach($bon->orders_driver as $order)
                                             <tr class="hover:bg-white transition-colors">
                                                 <td class="px-5 py-3 font-black text-gray-900">#{{ $order->code }}</td>
                                                 <td class="px-5 py-3 text-gray-500 max-w-[160px] truncate">{{ $order->location ?? '-' }}</td>
